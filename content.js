@@ -13,18 +13,35 @@ function createTodoWidget() {
   todoWidget.id = 'sticky-todo-widget';
   todoWidget.className = 'sticky-todo-widget';
   
+  // Force LTR direction
+  todoWidget.dir = 'ltr';
+  todoWidget.style.direction = 'ltr';
+  todoWidget.style.textAlign = 'left';
+  
   // Create header with title and controls
   const header = document.createElement('div');
   header.className = 'sticky-todo-header';
+  header.dir = 'ltr';
   
   // Create title
   const title = document.createElement('div');
   title.className = 'sticky-todo-title';
   title.textContent = 'Sticky Todo';
+  title.dir = 'ltr';
   
   // Create controls container
   const controls = document.createElement('div');
   controls.className = 'sticky-todo-controls';
+  
+  // Delete All button
+  const deleteAllBtn = document.createElement('button');
+  deleteAllBtn.className = 'sticky-todo-btn sticky-todo-delete-all';
+  deleteAllBtn.innerHTML = '<span>🗑</span>';
+  deleteAllBtn.title = 'Delete All Tasks';
+  deleteAllBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteAllTodos();
+  });
   
   // Minimize button
   const minimizeBtn = document.createElement('button');
@@ -47,6 +64,7 @@ function createTodoWidget() {
   });
   
   // Add buttons to controls
+  controls.appendChild(deleteAllBtn);
   controls.appendChild(minimizeBtn);
   controls.appendChild(closeBtn);
   
@@ -60,20 +78,24 @@ function createTodoWidget() {
   // Create content container
   const content = document.createElement('div');
   content.className = 'sticky-todo-content';
+  content.dir = 'ltr';
   
   // Create todo list
   const todoList = document.createElement('ul');
   todoList.className = 'sticky-todo-list';
+  todoList.dir = 'ltr';
   content.appendChild(todoList);
   
   // Create input area
   const inputArea = document.createElement('div');
   inputArea.className = 'sticky-todo-input-area';
+  inputArea.dir = 'ltr';
   
   const todoInput = document.createElement('input');
   todoInput.type = 'text';
   todoInput.className = 'sticky-todo-input';
-  todoInput.placeholder = '...Add new task';
+  todoInput.placeholder = 'Add new task';
+  todoInput.dir = 'ltr';
   
   const addButton = document.createElement('button');
   addButton.className = 'sticky-todo-add-btn';
@@ -344,8 +366,8 @@ function toggleTodoCompletion(id) {
     return todo;
   });
   
+  // Save todos but don't re-render
   saveTodos();
-  renderTodos();
   
   // Update minimized state if needed
   if (isMinimized) {
@@ -393,52 +415,97 @@ function loadTodos() {
 
 // Render todos in the list
 function renderTodos() {
-  const todoList = document.querySelector('.sticky-todo-list');
-  if (!todoList) return;
-  
+  const todoList = todoWidget.querySelector('.sticky-todo-list');
   todoList.innerHTML = '';
   
   if (todos.length === 0) {
-    const emptyItem = document.createElement('li');
-    emptyItem.className = 'sticky-todo-empty';
-    emptyItem.textContent = '!No tasks yet. Add one below';
-    todoList.appendChild(emptyItem);
+    // Show empty message
+    const emptyMsg = document.createElement('div');
+    emptyMsg.className = 'sticky-todo-empty';
+    emptyMsg.textContent = 'No tasks yet. Add one below';
+    emptyMsg.dir = 'ltr';
+    emptyMsg.style.direction = 'ltr';
+    emptyMsg.style.textAlign = 'center';
+    todoList.appendChild(emptyMsg);
+    todoWidget.classList.remove('has-incomplete');
     return;
   }
   
   todos.forEach(todo => {
-    const li = document.createElement('li');
-    li.className = 'sticky-todo-item';
-    if (todo.completed) {
-      li.classList.add('completed');
-    }
-    
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'sticky-todo-checkbox';
-    checkbox.checked = todo.completed;
-    checkbox.addEventListener('change', () => toggleTodoCompletion(todo.id));
-    
-    const text = document.createElement('span');
-    text.className = 'sticky-todo-text';
-    text.textContent = todo.text;
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'sticky-todo-delete';
-    deleteBtn.innerHTML = '×';
-    deleteBtn.title = 'Delete task';
-    deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
-    
-    li.appendChild(checkbox);
-    li.appendChild(text);
-    li.appendChild(deleteBtn);
-    
+    const li = createTodoElement(todo);
     todoList.appendChild(li);
   });
   
   // Update status dot when minimized
   if (isMinimized) {
     updateMinimizedState();
+  }
+}
+
+// Create a todo item element
+function createTodoElement(todo) {
+  const li = document.createElement('li');
+  li.className = 'sticky-todo-item';
+  li.dataset.id = todo.id;
+  li.dir = 'ltr';
+  
+  if (todo.completed) {
+    li.classList.add('completed');
+  }
+  
+  // Add checkbox
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'sticky-todo-checkbox';
+  checkbox.checked = todo.completed;
+  checkbox.addEventListener('change', (e) => {
+    e.stopPropagation(); // Prevent event bubbling
+    const listItem = e.target.closest('.sticky-todo-item');
+    const todoText = listItem.querySelector('.sticky-todo-text');
+    
+    // Smoothly toggle the completed state with animation
+    if (e.target.checked) {
+      todoText.style.transition = 'all 0.3s ease';
+      listItem.classList.add('completed');
+    } else {
+      todoText.style.transition = 'all 0.3s ease';
+      listItem.classList.remove('completed');
+    }
+    
+    toggleTodoCompletion(todo.id);
+  });
+  
+  // Add the todo text
+  const todoText = document.createElement('span');
+  todoText.className = 'sticky-todo-text';
+  todoText.textContent = todo.text;
+  todoText.dir = 'ltr';
+  todoText.style.direction = 'ltr';
+  todoText.style.textAlign = 'left';
+  
+  // Add delete button
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'sticky-todo-delete';
+  deleteBtn.innerHTML = '×';
+  deleteBtn.title = 'Delete';
+  deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+  
+  // Assemble the item
+  li.appendChild(checkbox);
+  li.appendChild(todoText);
+  li.appendChild(deleteBtn);
+  
+  return li;
+}
+
+// Delete all todos
+function deleteAllTodos() {
+  if (todos.length === 0) return;
+  
+  if (confirm('Are you sure you want to delete all tasks?')) {
+    todos = [];
+    saveTodos();
+    renderTodos();
   }
 }
 

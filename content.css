@@ -3,15 +3,19 @@
   position: fixed;
   z-index: 99999;
   width: 320px;
-  background: white;
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 16px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 8px 10px rgba(0, 0, 0, 0.12);
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Roboto, Arial, sans-serif;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   left: 20px;
   top: 20px;
   border: 1px solid rgba(230, 235, 245, 0.8);
+  letter-spacing: -0.01em;
+  font-weight: 400;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 /* Hidden state */
@@ -133,6 +137,8 @@
 /* Header styles with gradient and improved design */
 .sticky-todo-header {
   background: linear-gradient(135deg, #4568DC, #B06AB3);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
   color: white;
   display: flex;
   justify-content: space-between;
@@ -142,6 +148,8 @@
   height: 50px;
   position: relative;
   overflow: hidden;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 /* Add subtle pattern to header */
@@ -192,6 +200,7 @@
   padding: 0;
   transition: all 0.2s;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .sticky-todo-btn span {
@@ -209,7 +218,11 @@
 }
 
 .sticky-todo-minimize span {
-  margin-top: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-top: 0;
 }
 
 .sticky-todo-btn:hover {
@@ -228,7 +241,10 @@
   transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-  background-color: #FAFBFF;
+  background-color: rgba(250, 251, 255, 0.7);
+  backdrop-filter: blur(10px);
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 .sticky-todo-widget.sticky-todo-minimized .sticky-todo-content {
@@ -239,20 +255,23 @@
 
 /* Todo list */
 .sticky-todo-list {
-  list-style: none;
-  padding: 0;
+  padding: 10px 0;
   margin: 0;
+  list-style: none;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 /* Todo item with enhanced animation */
 .sticky-todo-item {
   display: flex;
   align-items: center;
-  padding: 14px 18px;
-  border-bottom: 1px solid #EDF2F7;
-  transition: all 0.2s;
+  padding: 8px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  animation: slideInItem 0.3s ease;
   position: relative;
-  overflow: hidden;
+  transition: background 0.2s;
+  direction: ltr !important;
 }
 
 .sticky-todo-item:hover {
@@ -265,8 +284,8 @@
 }
 
 @keyframes slideInItem {
-  from { transform: translateY(-20px); opacity: 0; background-color: #EDF2FF; }
-  to { transform: translateY(0); opacity: 1; background-color: transparent; }
+  from { opacity: 0.8; }
+  to { opacity: 1; }
 }
 
 /* Remove animation */
@@ -290,17 +309,38 @@
   accent-color: #4568DC;
   border-radius: 4px;
   transition: all 0.2s;
+  background-color: white;
+  border: 1px solid #ccc;
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  outline: none;
 }
 
 .sticky-todo-checkbox:checked {
+  background-color: #4568DC;
+  border-color: #4568DC;
   box-shadow: 0 0 0 2px rgba(69, 104, 220, 0.2);
+}
+
+.sticky-todo-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 /* Todo text with animation */
 .sticky-todo-text {
   flex: 1;
   font-size: 15px;
-  color: #333;
+  color: #333 !important;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: all 0.3s;
@@ -309,8 +349,9 @@
 
 .sticky-todo-item.completed .sticky-todo-text {
   text-decoration: line-through;
-  color: #A0AEC0;
+  color: #A0AEC0 !important;
   font-style: italic;
+  transition: all 0.3s ease;
 }
 
 /* Delete button with improved hover effect */
@@ -346,22 +387,24 @@
 .sticky-todo-empty {
   text-align: center;
   padding: 28px 20px;
-  color: #A0AEC0;
+  color: #A0AEC0 !important;
   font-style: italic;
   font-size: 15px;
   background-image: 
     linear-gradient(90deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0) 40px),
     linear-gradient(-90deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0) 40px);
+  direction: ltr !important;
 }
 
 /* Input area with improved design */
 .sticky-todo-input-area {
   display: flex;
-  padding: 14px 16px;
-  background-color: white;
-  border-top: 1px solid #EDF2F7;
-  transition: all 0.3s ease;
-  gap: 16px; /* Added spacing between input and button */
+  padding: 10px 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: rgba(250, 251, 255, 0.7);
+  backdrop-filter: blur(10px);
+  direction: ltr !important;
+  gap: 12px;
 }
 
 .sticky-todo-widget.sticky-todo-minimized .sticky-todo-input-area {
@@ -373,14 +416,17 @@
 /* Input with focus effect */
 .sticky-todo-input {
   flex: 1;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 15px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
   outline: none;
   transition: all 0.2s;
-  background-color: #FAFBFF;
-  color: #4A5568;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  direction: ltr !important;
+  text-align: left !important;
+  color: #333 !important;
 }
 
 .sticky-todo-input:focus {
@@ -448,4 +494,11 @@
 
 .sticky-todo-content::-webkit-scrollbar-thumb:hover {
   background: #A0AEC0;
+}
+
+/* Make delete-all button visible again */
+.sticky-todo-delete-all {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
