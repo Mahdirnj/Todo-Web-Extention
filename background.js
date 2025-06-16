@@ -1,5 +1,6 @@
 // Initialize default settings when the extension is installed
 chrome.runtime.onInstalled.addListener(() => {
+  console.log("Todo Extension installed/updated");
   // Set default settings
   chrome.storage.local.set({
     isVisible: true,
@@ -9,7 +10,14 @@ chrome.runtime.onInstalled.addListener(() => {
       { id: 1, text: "Welcome to Sticky Todo!", completed: false },
       { id: 2, text: "Add your tasks here", completed: false },
       { id: 3, text: "Click to mark as completed", completed: true }
-    ]
+    ],
+    timestamp: Date.now() // Add initial timestamp for sync
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.error('Error initializing storage:', chrome.runtime.lastError);
+    } else {
+      console.log('Storage initialized successfully');
+    }
   });
 });
 
@@ -25,23 +33,46 @@ chrome.action.onClicked.addListener((tab) => {
       isVisible: newVisibility 
     }).catch(() => {
       // Tab might not have content script loaded
+      console.log('Could not send visibility message to tab', tab.id);
     });
   });
 });
 
 // Listen for storage changes and broadcast to all tabs if needed
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.isVisible) {
+  console.log('Background detected storage changes:', namespace, changes);
+  
+  if (namespace === 'local') {
     // Broadcast visibility changes to all tabs
-    chrome.tabs.query({}, (tabs) => {
-      tabs.forEach(tab => {
-        chrome.tabs.sendMessage(tab.id, { 
-          action: "visibilityChanged", 
-          isVisible: changes.isVisible.newValue 
-        }).catch(() => {
-          // Ignore errors for tabs that don't have the content script
-        });
+    if (changes.isVisible) {
+      broadcastToAllTabs({
+        action: "visibilityChanged", 
+        isVisible: changes.isVisible.newValue
       });
-    });
+    }
+    
+    // Broadcast todos changes to help with synchronization
+    if (changes.todos) {
+      console.log('Background detected todos changes, broadcasting sync notification');
+      broadcastToAllTabs({
+        action: "todosChanged",
+        timestamp: changes.timestamp ? changes.timestamp.newValue : Date.now()
+      });
+    }
   }
 });
+
+// Helper function to broadcast messages to all tabs
+function broadcastToAllTabs(message) {
+  chrome.tabs.query({}, (tabs) => {
+    for (const tab of tabs) {
+      try {
+        chrome.tabs.sendMessage(tab.id, message).catch(() => {
+          // Ignore errors for tabs that don't have the content script
+        });
+      } catch (error) {
+        // Ignore errors for restricted tabs
+      }
+    }
+  });
+}
