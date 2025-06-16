@@ -5,6 +5,7 @@ let dragOffset = { x: 0, y: 0 };
 let todos = [];
 let isMinimized = false;
 let isVisible = true;
+let lastUpdateTimestamp = Date.now(); // Track when tasks were last updated
 
 // Function to create the Todo widget
 function createTodoWidget() {
@@ -23,11 +24,18 @@ function createTodoWidget() {
   header.className = 'sticky-todo-header';
   header.dir = 'ltr';
   
-  // Create title
+  // Create title with sync indicator
   const title = document.createElement('div');
   title.className = 'sticky-todo-title';
   title.textContent = 'Sticky Todo';
   title.dir = 'ltr';
+  title.style.position = 'relative';
+  
+  // Create sync indicator
+  const syncIndicator = document.createElement('div');
+  syncIndicator.className = 'sticky-todo-sync-indicator';
+  syncIndicator.title = 'Syncing tasks with other tabs';
+  title.appendChild(syncIndicator);
   
   // Create controls container
   const controls = document.createElement('div');
@@ -310,21 +318,24 @@ function hideTodoWidget() {
   }, 300);
 }
 
-// Show the todo widget
+// Show the widget (unhide)
 function showTodoWidget() {
-  if (!todoWidget) return;
+  if (!todoWidget) {
+    createTodoWidget();
+    setupCrossBrowserSync(); // Set up sync when creating widget
+  } else {
+    todoWidget.classList.add('sticky-todo-showing');
+    todoWidget.classList.remove('sticky-todo-hidden');
+    setTimeout(() => {
+      todoWidget.classList.remove('sticky-todo-showing');
+    }, 300);
+  }
   
-  todoWidget.classList.remove('sticky-todo-hidden');
-  todoWidget.classList.add('sticky-todo-showing');
+  // Load latest tasks when showing
+  loadTodos();
   
   isVisible = true;
-  
-  // Update storage
   chrome.storage.local.set({ isVisible: true });
-  
-  setTimeout(() => {
-    todoWidget.classList.remove('sticky-todo-showing');
-  }, 300);
 }
 
 // Add a new todo
@@ -398,16 +409,24 @@ function deleteTodo(id) {
   }
 }
 
-// Save todos to storage
+// Save todos to storage with timestamp
 function saveTodos() {
-  chrome.storage.local.set({ todos });
+  const saveData = {
+    todos: todos,
+    timestamp: Date.now()
+  };
+  lastUpdateTimestamp = saveData.timestamp;
+  chrome.storage.local.set(saveData);
 }
 
 // Load todos from storage
 function loadTodos() {
-  chrome.storage.local.get(['todos'], (result) => {
+  chrome.storage.local.get(['todos', 'timestamp'], (result) => {
     if (result.todos && Array.isArray(result.todos)) {
       todos = result.todos;
+      if (result.timestamp) {
+        lastUpdateTimestamp = result.timestamp;
+      }
       renderTodos();
     }
   });
@@ -509,6 +528,112 @@ function deleteAllTodos() {
   }
 }
 
+// Show sync indicator animation
+function showSyncAnimation() {
+  const syncIndicator = todoWidget.querySelector('.sticky-todo-sync-indicator');
+  if (syncIndicator) {
+    syncIndicator.classList.remove('sticky-todo-sync-active');
+    // Force reflow
+    void syncIndicator.offsetWidth;
+    syncIndicator.classList.add('sticky-todo-sync-active');
+    
+    // Remove the class after animation completes
+    setTimeout(() => {
+      syncIndicator.classList.remove('sticky-todo-sync-active');
+    }, 1000);
+  }
+}
+
+// Set up storage change listener to sync between tabs
+function setupCrossBrowserSync() {
+  // Listen for changes to storage from other tabs
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.timestamp && changes.todos) {
+      const newTimestamp = changes.timestamp.newValue;
+      const newTodos = changes.todos.newValue;
+      
+      // Only update if the incoming change is newer than our last update
+      if (newTimestamp > lastUpdateTimestamp) {
+        console.log('Sync: Detected newer tasks from another tab');
+        
+        // Instead of completely replacing, merge intelligently
+        mergeTodos(newTodos);
+        
+        lastUpdateTimestamp = newTimestamp;
+        showSyncAnimation(); // Show sync animation
+      }
+    }
+  });
+  
+  // Also set up a periodic check as backup (every 3 seconds)
+  setInterval(checkForUpdates, 3000);
+}
+
+// Check for updates from storage
+function checkForUpdates() {
+  chrome.storage.local.get(['todos', 'timestamp'], (result) => {
+    // Only update if the storage data is newer than what we have
+    if (result.timestamp && result.timestamp > lastUpdateTimestamp && result.todos) {
+      console.log('Sync: Found newer tasks via polling');
+      
+      // Merge rather than replace
+      mergeTodos(result.todos);
+      
+      lastUpdateTimestamp = result.timestamp;
+      showSyncAnimation(); // Show sync animation
+    }
+  });
+}
+
+// Intelligently merge todos from different tabs
+function mergeTodos(incomingTodos) {
+  if (!incomingTodos || !Array.isArray(incomingTodos)) return;
+  
+  // Create map of existing todos by ID for quick lookup
+  const existingTodosMap = {};
+  todos.forEach(todo => {
+    existingTodosMap[todo.id] = todo;
+  });
+  
+  // Track IDs from both sets
+  const allIds = new Set();
+  todos.forEach(todo => allIds.add(todo.id));
+  incomingTodos.forEach(todo => allIds.add(todo.id));
+  
+  // Create new merged array
+  const mergedTodos = [];
+  
+  // Process all IDs
+  allIds.forEach(id => {
+    const existingTodo = existingTodosMap[id];
+    const incomingTodo = incomingTodos.find(t => t.id === id);
+    
+    // Case 1: Todo exists in both sets
+    if (existingTodo && incomingTodo) {
+      // If completion status different, prefer the completed one
+      // This ensures a completed task in any tab is reflected everywhere
+      if (existingTodo.completed !== incomingTodo.completed) {
+        mergedTodos.push(incomingTodo.completed ? incomingTodo : existingTodo);
+      } else {
+        // If completion status same, keep the one with newer text if different
+        mergedTodos.push(incomingTodo);
+      }
+    } 
+    // Case 2: Todo only in incoming set (new todo from another tab)
+    else if (incomingTodo) {
+      mergedTodos.push(incomingTodo);
+    } 
+    // Case 3: Todo only in existing set (deleted in another tab)
+    else if (existingTodo) {
+      mergedTodos.push(existingTodo);
+    }
+  });
+  
+  // Update todos and render
+  todos = mergedTodos;
+  renderTodos();
+}
+
 // Check visibility setting and initialize
 function initializeTodoWidget() {
   chrome.storage.local.get(['isVisible'], (result) => {
@@ -516,6 +641,7 @@ function initializeTodoWidget() {
     
     if (isVisible) {
       createTodoWidget();
+      setupCrossBrowserSync(); // Set up synchronization
     }
   });
 }
@@ -536,7 +662,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initializeTodoWidget);
+document.addEventListener('DOMContentLoaded', () => {
+  initializeTodoWidget();
+});
 
 // If document is already loaded, initialize now
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
