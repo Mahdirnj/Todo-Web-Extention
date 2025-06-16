@@ -4,7 +4,7 @@
   <title>Sticky Todo</title>
   <style>
     body {
-      width: 250px;
+      width: 320px;
       font-family: 'Segoe UI', Roboto, Arial, sans-serif;
       margin: 0;
       padding: 0;
@@ -48,6 +48,87 @@
       background: #647DEE;
     }
     
+    .option-section {
+      margin-top: 15px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 15px;
+    }
+    
+    .option-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .option-row label {
+      margin-left: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .option-description {
+      font-size: 11px;
+      color: #666;
+      margin-left: 24px;
+      margin-top: 2px;
+      margin-bottom: 8px;
+    }
+    
+    .site-specific {
+      margin-top: 15px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 15px;
+    }
+    
+    .site-specific-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .site-specific-header label {
+      margin-left: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .site-inputs {
+      margin-top: 10px;
+      display: none;
+    }
+    
+    .site-input-group {
+      margin-bottom: 10px;
+    }
+    
+    .site-input-group label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #555;
+    }
+    
+    .site-input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 13px;
+    }
+    
+    .site-input:focus {
+      border-color: #7F53AC;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(127, 83, 172, 0.2);
+    }
+    
+    .help-text {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+    }
+    
     .info {
       font-size: 12px;
       color: #777;
@@ -84,6 +165,69 @@
     <div class="content">
       <button id="toggleButton" class="toggle-btn">Show/Hide Todo Widget</button>
       
+      <div class="option-section">
+        <div class="option-row">
+          <input type="checkbox" id="syncStateAcrossTabs" />
+          <label for="syncStateAcrossTabs">Sync Widget State</label>
+        </div>
+        <div class="option-description">
+          Keep minimized/expanded state consistent across all tabs
+        </div>
+        
+        <div class="option-row">
+          <input type="checkbox" id="hideInFullscreen" />
+          <label for="hideInFullscreen">Auto-hide in Fullscreen</label>
+        </div>
+        <div class="option-description">
+          Automatically hide widget when watching fullscreen videos
+        </div>
+        
+        <div class="option-row">
+          <input type="checkbox" id="enableTransparency" />
+          <label for="enableTransparency">Auto-Fade Minimized Button</label>
+        </div>
+        <div class="option-description">
+          Make minimized button 50% transparent after 2 seconds of inactivity
+        </div>
+        
+        <div class="option-row">
+          <input type="checkbox" id="disableAnimations" />
+          <label for="disableAnimations">Disable Animations</label>
+        </div>
+        <div class="option-description">
+          Turn off task reminder animations and red dot notification
+        </div>
+      </div>
+      
+      <div class="site-specific">
+        <div class="site-specific-header">
+          <input type="checkbox" id="enableSiteSpecific" />
+          <label for="enableSiteSpecific">Enable Site-Specific Tasks</label>
+        </div>
+        
+        <div id="siteInputsContainer" class="site-inputs">
+          <div class="site-input-group">
+            <label for="site1">Website 1:</label>
+            <input type="text" id="site1" class="site-input" placeholder="e.g., youtube.com" />
+            <div class="help-text">Enter the main domain only (e.g., youtube.com)</div>
+          </div>
+          
+          <div class="site-input-group">
+            <label for="site2">Website 2:</label>
+            <input type="text" id="site2" class="site-input" placeholder="e.g., github.com" />
+          </div>
+          
+          <div class="site-input-group">
+            <label for="site3">Website 3:</label>
+            <input type="text" id="site3" class="site-input" placeholder="e.g., facebook.com" />
+          </div>
+          
+          <div class="help-text">
+            Tasks will show only when you visit any page under these domains.
+          </div>
+        </div>
+      </div>
+      
       <div class="info">
         <strong>Tips:</strong>
         <ul>
@@ -92,6 +236,8 @@
           <li><span class="important">Double-click</span> on the circle to open the widget</li>
           <li>A red dot indicates pending tasks</li>
           <li>Click <span class="shortcut">×</span> to hide the widget completely</li>
+          <li><span class="important">Site-specific tasks</span> appear only on matching websites</li>
+          <li>Click <span class="shortcut">↻</span> to manually refresh tasks if sync fails</li>
         </ul>
       </div>
     </div>
