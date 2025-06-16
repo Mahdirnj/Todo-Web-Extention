@@ -531,3 +531,144 @@
   50% { transform: scale(1.5); opacity: 1; background-color: #4CAF50; }
   100% { transform: scale(1); opacity: 0; }
 }
+
+/* Mode switcher container */
+.sticky-todo-mode-switcher {
+  padding: 8px 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: center;
+  background-color: rgba(250, 251, 255, 0.7);
+  backdrop-filter: blur(8px);
+  direction: ltr !important;
+}
+
+/* Mode switch buttons */
+.sticky-todo-mode-switcher button {
+  padding: 4px 10px;
+  margin: 0 4px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+#globalModeBtn {
+  background-color: #7F53AC;
+  color: white;
+}
+
+#siteModeBtn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.sticky-todo-mode-switcher button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-todo-mode-switcher button:active {
+  transform: translateY(0);
+}
+
+/* Site indicator styling */
+.sticky-todo-site-indicator {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-right: auto;
+  padding: 3px 6px;
+  background-color: rgba(127, 83, 172, 0.15);
+  border-radius: 3px;
+  color: #7F53AC;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: none; /* Hidden by default */
+}
+
+/* Hide mode switcher when minimized */
+.sticky-todo-widget.sticky-todo-minimized .sticky-todo-mode-switcher {
+  display: none;
+}
+
+/* Adjust spacing for empty state in site-specific mode */
+.sticky-todo-empty.site-specific {
+  color: #9C27B0 !important;
+  font-style: normal !important;
+  background-image: 
+    linear-gradient(90deg, rgba(156, 39, 176, 0.03) 0px, rgba(0, 0, 0, 0) 40px),
+    linear-gradient(-90deg, rgba(156, 39, 176, 0.03) 0px, rgba(0, 0, 0, 0) 40px);
+}
+
+/* Reload button styles */
+.sticky-todo-reload span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.sticky-todo-reload:hover span {
+  transform: rotate(180deg);
+}
+
+.sticky-todo-reload-spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Transparency mode for minimized widget */
+.sticky-todo-minimized.transparency-enabled {
+  transition: opacity 0.5s ease-in-out, transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), width 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), height 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), border-radius 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.sticky-todo-minimized.transparency-enabled.inactive {
+  opacity: 0.5;
+}
+
+.sticky-todo-minimized.transparency-enabled:hover {
+  opacity: 1;
+}
+
+/* Disable animations when setting is enabled */
+.animations-disabled .sticky-todo-widget.sticky-todo-minimized.has-incomplete::after {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.animations-disabled .sticky-todo-header {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-minimizing,
+.animations-disabled .sticky-todo-expanding,
+.animations-disabled .sticky-todo-showing,
+.animations-disabled .sticky-todo-hiding {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-sync-indicator {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-reload-spinning {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-item-new {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-item-removing {
+  animation: none !important;
+}
