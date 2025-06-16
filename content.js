@@ -411,12 +411,23 @@ function deleteTodo(id) {
 
 // Save todos to storage with timestamp
 function saveTodos() {
-  const saveData = {
-    todos: todos,
-    timestamp: Date.now()
-  };
-  lastUpdateTimestamp = saveData.timestamp;
-  chrome.storage.local.set(saveData);
+  try {
+    const saveData = {
+      todos: todos,
+      timestamp: Date.now()
+    };
+    lastUpdateTimestamp = saveData.timestamp;
+    chrome.storage.local.set(saveData, () => {
+      // Check for any chrome.runtime errors after storage operation
+      if (chrome.runtime.lastError) {
+        console.error('Error saving todos:', chrome.runtime.lastError);
+      } else {
+        console.log('Todos saved successfully with timestamp:', saveData.timestamp);
+      }
+    });
+  } catch (error) {
+    console.error('Error in saveTodos:', error);
+  }
 }
 
 // Load todos from storage
@@ -547,42 +558,86 @@ function showSyncAnimation() {
 // Set up storage change listener to sync between tabs
 function setupCrossBrowserSync() {
   // Listen for changes to storage from other tabs
-  chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local' && changes.timestamp && changes.todos) {
-      const newTimestamp = changes.timestamp.newValue;
-      const newTodos = changes.todos.newValue;
-      
-      // Only update if the incoming change is newer than our last update
-      if (newTimestamp > lastUpdateTimestamp) {
-        console.log('Sync: Detected newer tasks from another tab');
+  try {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      console.log('Storage change detected:', namespace, changes);
+      if (namespace === 'local' && changes.timestamp && changes.todos) {
+        const newTimestamp = changes.timestamp.newValue;
+        const newTodos = changes.todos.newValue;
         
-        // Instead of completely replacing, merge intelligently
-        mergeTodos(newTodos);
-        
-        lastUpdateTimestamp = newTimestamp;
-        showSyncAnimation(); // Show sync animation
+        // Only update if the incoming change is newer than our last update
+        if (newTimestamp > lastUpdateTimestamp) {
+          console.log('Sync: Detected newer tasks from another tab', newTodos);
+          
+          // Instead of completely replacing, merge intelligently
+          mergeTodos(newTodos);
+          
+          lastUpdateTimestamp = newTimestamp;
+          showSyncAnimation(); // Show sync animation
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('Error setting up storage listener:', error);
+  }
   
   // Also set up a periodic check as backup (every 3 seconds)
   setInterval(checkForUpdates, 3000);
 }
 
-// Check for updates from storage
-function checkForUpdates() {
-  chrome.storage.local.get(['todos', 'timestamp'], (result) => {
-    // Only update if the storage data is newer than what we have
-    if (result.timestamp && result.timestamp > lastUpdateTimestamp && result.todos) {
-      console.log('Sync: Found newer tasks via polling');
-      
-      // Merge rather than replace
-      mergeTodos(result.todos);
-      
-      lastUpdateTimestamp = result.timestamp;
-      showSyncAnimation(); // Show sync animation
+// Listen for messages from background script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Content script received message:', request);
+  
+  if (request.action === 'visibilityChanged') {
+    if (request.isVisible) {
+      if (!todoWidget) {
+        createTodoWidget();
+      } else {
+        showTodoWidget();
+      }
+    } else if (todoWidget) {
+      hideTodoWidget();
     }
-  });
+    return true;
+  }
+  
+  // Handle direct sync notifications from background
+  if (request.action === 'todosChanged') {
+    console.log('Received sync notification from background');
+    if (todoWidget && request.timestamp) {
+      // Force a sync check
+      checkForUpdates(true);
+      return true;
+    }
+  }
+  
+  return false;
+});
+
+// Check for updates from storage with optional force parameter
+function checkForUpdates(force = false) {
+  try {
+    chrome.storage.local.get(['todos', 'timestamp'], (result) => {
+      // Debug logging
+      console.log('Polling for updates. Current timestamp:', lastUpdateTimestamp, 'Storage timestamp:', result.timestamp);
+      
+      // Only update if the storage data is newer than what we have or if forced
+      if (result.todos && ((result.timestamp && result.timestamp > lastUpdateTimestamp) || force)) {
+        console.log('Sync: Found newer tasks via polling', result.todos);
+        
+        // Merge rather than replace
+        mergeTodos(result.todos);
+        
+        if (result.timestamp) {
+          lastUpdateTimestamp = result.timestamp;
+        }
+        showSyncAnimation(); // Show sync animation
+      }
+    });
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+  }
 }
 
 // Intelligently merge todos from different tabs
@@ -645,21 +700,6 @@ function initializeTodoWidget() {
     }
   });
 }
-
-// Listen for messages from background script
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'visibilityChanged') {
-    if (request.isVisible) {
-      if (!todoWidget) {
-        createTodoWidget();
-      } else {
-        showTodoWidget();
-      }
-    } else if (todoWidget) {
-      hideTodoWidget();
-    }
-  }
-});
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
