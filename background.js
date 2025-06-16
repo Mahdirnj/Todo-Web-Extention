@@ -5,6 +5,13 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.set({
     isVisible: true,
     isMinimized: false,
+    syncStateAcrossTabs: true, // Enable widget state sync by default
+    hideInFullscreen: true, // Enable auto-hide in fullscreen by default
+    siteSpecificEnabled: false,
+    siteUrls: [],
+    siteTodos: {},
+    lastTaskMode: 'global',
+    minimizedStateTimestamp: Date.now(),
     position: { x: 20, y: 20 },
     todos: [
       { id: 1, text: "Welcome to Sticky Todo!", completed: false },
@@ -51,12 +58,49 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       });
     }
     
-    // Broadcast todos changes to help with synchronization
+    // Broadcast minimized state changes
+    if (changes.isMinimized && changes.minimizedStateTimestamp) {
+      broadcastToAllTabs({
+        action: "minimizedStateChanged",
+        isMinimized: changes.isMinimized.newValue,
+        timestamp: changes.minimizedStateTimestamp.newValue
+      });
+    }
+    
+    // Broadcast global todos changes to help with synchronization
     if (changes.todos) {
       console.log('Background detected todos changes, broadcasting sync notification');
       broadcastToAllTabs({
         action: "todosChanged",
         timestamp: changes.timestamp ? changes.timestamp.newValue : Date.now()
+      });
+    }
+    
+    // Broadcast site-specific todos changes
+    if (changes.siteTodos) {
+      console.log('Background detected site todos changes, broadcasting sync notification');
+      broadcastToAllTabs({
+        action: "todosChanged",
+        timestamp: changes.timestamp ? changes.timestamp.newValue : Date.now(),
+        isSiteTodos: true
+      });
+    }
+    
+    // Broadcast hideInFullscreen setting changes
+    if (changes.hideInFullscreen) {
+      broadcastToAllTabs({
+        action: "settingChanged",
+        setting: "hideInFullscreen",
+        value: changes.hideInFullscreen.newValue
+      });
+    }
+    
+    // Broadcast syncStateAcrossTabs setting changes
+    if (changes.syncStateAcrossTabs) {
+      broadcastToAllTabs({
+        action: "settingChanged",
+        setting: "syncStateAcrossTabs",
+        value: changes.syncStateAcrossTabs.newValue
       });
     }
   }
@@ -76,3 +120,46 @@ function broadcastToAllTabs(message) {
     }
   });
 }
+
+// Set up error handling system
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+  if (message.action === "reportError") {
+    console.error('Error from content script:', message.error);
+    sendResponse({status: "Error logged"});
+    return true;
+  }
+  
+  // Handle graceful recovery from invalid extension context
+  if (message.action === "checkAlive" || message.action === "ping") {
+    sendResponse({status: "ok"});
+    return true;
+  }
+  
+  return false;
+});
+
+// Capture and log uncaught errors
+function handleError(error) {
+  console.error('Background script error:', error);
+  // Could implement additional error reporting here
+}
+
+// Set up global error handling
+self.onerror = handleError;
+self.onunhandledrejection = function(event) {
+  handleError(event.reason);
+};
+
+// Handle extension context invalidation
+chrome.runtime.onSuspend.addListener(function() {
+  console.log('Extension being suspended, cleaning up...');
+  // Perform any cleanup needed
+});
+
+// Keep service worker alive for proper functioning
+function keepAlive() {
+  // Send a heartbeat to keep the service worker alive
+  setTimeout(keepAlive, 25 * 1000); // 25 seconds
+}
+
+keepAlive();
