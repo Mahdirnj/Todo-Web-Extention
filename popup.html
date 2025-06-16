@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sticky Todo</title>
+  <style>
+    body {
+      width: 250px;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .popup-container {
+      background: white;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #7F53AC, #647DEE);
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .content {
+      padding: 15px;
+    }
+    
+    .toggle-btn {
+      background: #7F53AC;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 15px;
+      width: 100%;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-bottom: 10px;
+    }
+    
+    .toggle-btn:hover {
+      background: #647DEE;
+    }
+    
+    .info {
+      font-size: 12px;
+      color: #777;
+      line-height: 1.5;
+      margin-top: 15px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 15px;
+    }
+    
+    .info ul {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+    
+    .shortcut {
+      background: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    
+    .important {
+      color: #7F53AC;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="popup-container">
+    <div class="header">
+      <h1>Sticky Todo</h1>
+    </div>
+    
+    <div class="content">
+      <button id="toggleButton" class="toggle-btn">Show/Hide Todo Widget</button>
+      
+      <div class="info">
+        <strong>Tips:</strong>
+        <ul>
+          <li>Click and drag the header to move</li>
+          <li>Click <span class="shortcut">−</span> to minimize to a small circle</li>
+          <li><span class="important">Double-click</span> on the circle to open the widget</li>
+          <li>A red dot indicates pending tasks</li>
+          <li>Click <span class="shortcut">×</span> to hide the widget completely</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 

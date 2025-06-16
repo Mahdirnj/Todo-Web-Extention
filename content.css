@@ -1,0 +1,451 @@
+/* Todo Widget Styles */
+.sticky-todo-widget {
+  position: fixed;
+  z-index: 99999;
+  width: 320px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 8px 10px rgba(0, 0, 0, 0.12);
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  left: 20px;
+  top: 20px;
+  border: 1px solid rgba(230, 235, 245, 0.8);
+}
+
+/* Hidden state */
+.sticky-todo-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  pointer-events: none !important;
+  display: none;
+}
+
+/* Animations for showing/hiding */
+.sticky-todo-showing {
+  animation: todoAppear 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.sticky-todo-hiding {
+  animation: todoDisappear 0.3s cubic-bezier(0.6, -0.28, 0.74, 0.05);
+}
+
+@keyframes todoAppear {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes todoDisappear {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.8); opacity: 0; }
+}
+
+/* Minimized state with improved animations */
+.sticky-todo-minimized {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50%;
+  cursor: pointer !important;
+  overflow: hidden;
+  background: linear-gradient(135deg, #4568DC, #B06AB3);
+  box-shadow: 0 6px 20px rgba(69, 104, 220, 0.4);
+  pointer-events: all !important;
+  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+/* Make the minimized state more interactive */
+.sticky-todo-minimized:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(69, 104, 220, 0.5);
+}
+
+.sticky-todo-minimized:active {
+  transform: scale(0.95);
+}
+
+/* Make all children of minimized widget clickable */
+.sticky-todo-minimized * {
+  pointer-events: all !important;
+  cursor: pointer !important;
+}
+
+/* Ensure the header is always clickable in minimized state */
+.sticky-todo-minimized .sticky-todo-header {
+  pointer-events: all !important;
+  height: 50px !important;
+  width: 50px !important;
+  padding: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  cursor: pointer !important;
+}
+
+/* Animation for minimizing */
+.sticky-todo-minimizing {
+  animation: minimizeAnimation 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Animation for expanding */
+.sticky-todo-expanding {
+  animation: expandAnimation 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes minimizeAnimation {
+  from { border-radius: 16px; width: 320px; height: auto; }
+  to { border-radius: 50%; width: 50px; height: 50px; }
+}
+
+@keyframes expandAnimation {
+  from { border-radius: 50%; width: 50px; height: 50px; }
+  to { border-radius: 16px; width: 320px; height: auto; }
+}
+
+/* Pulse animation for minimized state */
+@keyframes pulseScale {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
+/* Status indicator for minimized state with enhanced animation */
+.sticky-todo-widget.sticky-todo-minimized.has-incomplete::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background-color: #FF5A5F;
+  border-radius: 50%;
+  top: 4px;
+  right: 4px;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 10px rgba(255, 90, 95, 0.6);
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 90, 95, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(255, 90, 95, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 90, 95, 0); }
+}
+
+/* Header styles with gradient and improved design */
+.sticky-todo-header {
+  background: linear-gradient(135deg, #4568DC, #B06AB3);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  cursor: move;
+  height: 50px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add subtle pattern to header */
+.sticky-todo-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+  pointer-events: none;
+}
+
+.sticky-todo-widget.sticky-todo-minimized .sticky-todo-header {
+  cursor: pointer;
+}
+
+/* Title styles with text shadow */
+.sticky-todo-title {
+  font-weight: 600;
+  font-size: 16px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  letter-spacing: 0.5px;
+}
+
+/* Controls container */
+.sticky-todo-controls {
+  display: flex;
+  gap: 10px;
+}
+
+/* Button styles with hover effects */
+.sticky-todo-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 18px;
+  padding: 0;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.sticky-todo-btn span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+}
+
+.sticky-todo-close span {
+  font-size: 20px;
+  margin-top: -1px;
+}
+
+.sticky-todo-minimize span {
+  margin-top: -2px;
+}
+
+.sticky-todo-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.sticky-todo-widget.sticky-todo-minimized .sticky-todo-controls {
+  display: none;
+}
+
+/* Content area with smoother transition */
+.sticky-todo-content {
+  max-height: 250px;
+  overflow-y: auto;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  background-color: #FAFBFF;
+}
+
+.sticky-todo-widget.sticky-todo-minimized .sticky-todo-content {
+  max-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* Todo list */
+.sticky-todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Todo item with enhanced animation */
+.sticky-todo-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #EDF2F7;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.sticky-todo-item:hover {
+  background-color: #F8F9FE;
+}
+
+/* New item animation */
+.sticky-todo-item-new {
+  animation: slideInItem 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInItem {
+  from { transform: translateY(-20px); opacity: 0; background-color: #EDF2FF; }
+  to { transform: translateY(0); opacity: 1; background-color: transparent; }
+}
+
+/* Remove animation */
+.sticky-todo-item-removing {
+  animation: removeItem 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+@keyframes removeItem {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(30px); opacity: 0; }
+}
+
+/* Checkbox with custom styling */
+.sticky-todo-checkbox {
+  margin-right: 14px;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  accent-color: #4568DC;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.sticky-todo-checkbox:checked {
+  box-shadow: 0 0 0 2px rgba(69, 104, 220, 0.2);
+}
+
+/* Todo text with animation */
+.sticky-todo-text {
+  flex: 1;
+  font-size: 15px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s;
+  padding: 2px 0;
+}
+
+.sticky-todo-item.completed .sticky-todo-text {
+  text-decoration: line-through;
+  color: #A0AEC0;
+  font-style: italic;
+}
+
+/* Delete button with improved hover effect */
+.sticky-todo-delete {
+  background: none;
+  border: none;
+  color: #CBD5E0;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  transition: all 0.2s;
+  transform: translateX(5px);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.sticky-todo-item:hover .sticky-todo-delete {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.sticky-todo-delete:hover {
+  background-color: rgba(255, 90, 95, 0.1);
+  color: #FF5A5F;
+}
+
+/* Empty list placeholder */
+.sticky-todo-empty {
+  text-align: center;
+  padding: 28px 20px;
+  color: #A0AEC0;
+  font-style: italic;
+  font-size: 15px;
+  background-image: 
+    linear-gradient(90deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0) 40px),
+    linear-gradient(-90deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0) 40px);
+}
+
+/* Input area with improved design */
+.sticky-todo-input-area {
+  display: flex;
+  padding: 14px 16px;
+  background-color: white;
+  border-top: 1px solid #EDF2F7;
+  transition: all 0.3s ease;
+  gap: 16px; /* Added spacing between input and button */
+}
+
+.sticky-todo-widget.sticky-todo-minimized .sticky-todo-input-area {
+  padding: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Input with focus effect */
+.sticky-todo-input {
+  flex: 1;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+  background-color: #FAFBFF;
+  color: #4A5568;
+}
+
+.sticky-todo-input:focus {
+  border-color: #4568DC;
+  box-shadow: 0 0 0 3px rgba(69, 104, 220, 0.15);
+}
+
+.sticky-todo-input::placeholder {
+  color: #A0AEC0;
+}
+
+/* Add button with animation */
+.sticky-todo-add-btn {
+  background: linear-gradient(135deg, #4568DC, #B06AB3);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 6px rgba(69, 104, 220, 0.3);
+  padding: 0;
+  line-height: 1;
+}
+
+.sticky-todo-add-btn span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 26px;
+  line-height: 1;
+  margin-top: -2px;
+}
+
+.sticky-todo-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(69, 104, 220, 0.4);
+}
+
+.sticky-todo-add-btn:active {
+  transform: translateY(0);
+}
+
+/* Scrollbar styling */
+.sticky-todo-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sticky-todo-content::-webkit-scrollbar-track {
+  background: #F8F9FE;
+}
+
+.sticky-todo-content::-webkit-scrollbar-thumb {
+  background: #CBD5E0;
+  border-radius: 3px;
+}
+
+.sticky-todo-content::-webkit-scrollbar-thumb:hover {
+  background: #A0AEC0;
+}

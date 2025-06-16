@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a90e2" />
+      <stop offset="100%" stop-color="#6774c8" />
+    </linearGradient>
+  </defs>
+  <rect x="14" y="14" width="100" height="100" rx="12" fill="url(#gradient)" />
+  
+  <!-- First task (completed) -->
+  <rect x="30" y="34" width="20" height="20" rx="4" fill="#FFFFFF" />
+  <path d="M35 44 L40 49 L52 37" stroke="#4a90e2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <rect x="60" y="39" width="40" height="4" rx="2" fill="#FFFFFF" opacity="0.8" />
+  <rect x="60" y="45" width="24" height="4" rx="2" fill="#FFFFFF" opacity="0.6" />
+  
+  <!-- Second task (incomplete) -->
+  <rect x="30" y="64" width="20" height="20" rx="4" fill="#FFFFFF" />
+  <rect x="60" y="69" width="40" height="4" rx="2" fill="#FFFFFF" opacity="0.8" />
+  <rect x="60" y="75" width="32" height="4" rx="2" fill="#FFFFFF" opacity="0.6" />
+  
+  <!-- Third task (incomplete) -->
+  <rect x="30" y="94" width="20" height="20" rx="4" fill="#FFFFFF" />
+  <rect x="60" y="99" width="36" height="4" rx="2" fill="#FFFFFF" opacity="0.8" />
+  <rect x="60" y="105" width="20" height="4" rx="2" fill="#FFFFFF" opacity="0.6" />
+  
+  <!-- Minimized dot indicator -->
+  <circle cx="110" cy="25" r="8" fill="#ff5252" />
+  <circle cx="110" cy="25" r="12" stroke="#ff5252" stroke-width="2" stroke-opacity="0.6" fill="none">
+    <animate attributeName="r" from="8" to="14" dur="1.5s" repeatCount="indefinite" />
+    <animate attributeName="stroke-opacity" from="0.6" to="0" dur="1.5s" repeatCount="indefinite" />
+  </circle>
+</svg> 
