@@ -16,6 +16,8 @@
   font-weight: 400;
   direction: ltr !important;
   text-align: left !important;
+  /* Start with opacity 0 to prevent flashing, will be set to 1 after initialization */
+  opacity: 0;
 }
 
 /* Hidden state */
@@ -305,7 +307,7 @@
 
 /* Checkbox with custom styling */
 .sticky-todo-checkbox {
-  margin-right: 14px;
+  margin-right: 18px; /* Increased from 14px to 18px for more space */
   cursor: pointer;
   width: 20px;
   height: 20px;
@@ -347,7 +349,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   transition: all 0.3s;
-  padding: 2px 0;
+  padding: 2px 0 2px 2px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Add a subtle effect on hover */
+.sticky-todo-text:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
 }
 
 .sticky-todo-item.completed .sticky-todo-text {
@@ -419,22 +429,30 @@
 /* Input with focus effect */
 .sticky-todo-input {
   flex: 1;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  outline: none !important;
+  transition: all 0.2s !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
   direction: ltr !important;
   text-align: left !important;
   color: #333 !important;
+  font-family: inherit !important;
+  width: auto !important; /* Prevent width issues */
+  height: auto !important; /* Prevent height issues */
+  min-height: unset !important; /* Reset any min-height */
+  box-sizing: border-box !important; /* Ensure padding is included in width */
+  -webkit-appearance: none !important; /* Reset any browser styles */
+  -moz-appearance: none !important;
+  appearance: none !important;
 }
 
 .sticky-todo-input:focus {
-  border-color: #4568DC;
-  box-shadow: 0 0 0 3px rgba(69, 104, 220, 0.15);
+  border-color: #4568DC !important;
+  box-shadow: 0 0 0 3px rgba(69, 104, 220, 0.15) !important;
 }
 
 .sticky-todo-input::placeholder {
