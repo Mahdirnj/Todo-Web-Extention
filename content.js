@@ -533,6 +533,13 @@ function createTodoWidget() {
   todoWidget.style.direction = 'ltr';
   todoWidget.style.textAlign = 'left';
   
+  // Set explicit position to fixed 
+  todoWidget.style.position = 'fixed';
+  
+  // Set initial position - default to upper left corner if no saved position
+  todoWidget.style.left = '20px';
+  todoWidget.style.top = '20px';
+  
   // Create header with title and controls
   const header = document.createElement('div');
   header.className = 'sticky-todo-header';
@@ -731,9 +738,17 @@ function createTodoWidget() {
   
   // Get stored position and state
   chrome.storage.local.get(['position', 'isMinimized', 'isVisible', 'syncStateAcrossTabs'], (result) => {
-    if (result.position) {
-      todoWidget.style.left = `${result.position.x}px`;
-      todoWidget.style.top = `${result.position.y}px`;
+    // Apply saved position if available, otherwise keep default
+    if (result.position && typeof result.position === 'object') {
+      // Ensure we have valid numbers
+      if (typeof result.position.x === 'number' && !isNaN(result.position.x) &&
+          typeof result.position.y === 'number' && !isNaN(result.position.y)) {
+        todoWidget.style.left = `${result.position.x}px`;
+        todoWidget.style.top = `${result.position.y}px`;
+        
+        // Force a reflow to ensure position is applied immediately
+        void todoWidget.offsetWidth;
+      }
     }
     
     isVisible = result.isVisible !== false; // Default to visible
@@ -900,9 +915,23 @@ function expandTodoWidget() {
   // Add animation class for expanding
   todoWidget.classList.add('sticky-todo-expanding');
   todoWidget.classList.remove('sticky-todo-minimized');
+  
+  // Remove transparency classes
+  todoWidget.classList.remove('transparency-enabled');
+  todoWidget.classList.remove('inactive');
+  
+  // Remove transparency event listeners
+  document.removeEventListener('mousemove', handleUserInteraction);
+  
+  // Clear any inactivity timer
+  if (inactivityTimer) {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = null;
+  }
+  
   setTimeout(() => {
     todoWidget.classList.remove('sticky-todo-expanding');
-  }, 300);
+  }, 400); // Match animation duration from CSS (0.4s)
   
   // Update visual state
   updateMinimizedState();
@@ -916,7 +945,15 @@ function startDrag(e) {
   // Don't drag if clicking on buttons
   if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
   
+  // Prevent expansion if widget is minimized and we're starting to drag
+  if (isMinimized) {
+    e.stopPropagation(); // Stop propagation to prevent expansion on click
+  }
+  
   isDragging = true;
+  
+  // Ensure widget has fixed position style
+  todoWidget.style.position = 'fixed';
   
   // Calculate offset
   const rect = todoWidget.getBoundingClientRect();
@@ -924,6 +961,9 @@ function startDrag(e) {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top
   };
+  
+  // Temporarily disable transitions during drag for smoother movement
+  todoWidget.style.transition = 'none';
   
   // Add event listeners for dragging in a safer way
   document.addEventListener('mousemove', onDrag);
@@ -941,12 +981,23 @@ function onDrag(e) {
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
       
-      // Keep widget within viewport bounds
-      const maxX = window.innerWidth - todoWidget.offsetWidth;
-      const maxY = window.innerHeight - todoWidget.offsetHeight;
+      // Keep widget within viewport bounds with a small margin
+      const margin = 10; // 10px margin from edges
+      const maxX = window.innerWidth - todoWidget.offsetWidth - margin;
+      const maxY = window.innerHeight - todoWidget.offsetHeight - margin;
       
-      todoWidget.style.left = `${Math.max(0, Math.min(maxX, newX))}px`;
-      todoWidget.style.top = `${Math.max(0, Math.min(maxY, newY))}px`;
+      // Apply new position with Math.max to ensure we don't go off-screen
+      todoWidget.style.left = `${Math.max(margin, Math.min(maxX, newX))}px`;
+      todoWidget.style.top = `${Math.max(margin, Math.min(maxY, newY))}px`;
+      
+      // Ensure widget stays visible by enforcing minimum visible area
+      if (parseFloat(todoWidget.style.left) < -todoWidget.offsetWidth * 0.7) {
+        todoWidget.style.left = `${-todoWidget.offsetWidth * 0.7}px`;
+      }
+      
+      if (parseFloat(todoWidget.style.top) < -todoWidget.offsetHeight * 0.7) {
+        todoWidget.style.top = `${-todoWidget.offsetHeight * 0.7}px`;
+      }
     } catch (error) {
       console.error('Error during drag:', error);
       stopDrag();
@@ -962,12 +1013,19 @@ function stopDrag(e) {
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', stopDrag);
   
-  // Save position
+  // Re-enable transitions
+  todoWidget.style.transition = '';
+  
+  // Save position - ensure we have valid integers
+  const left = parseFloat(todoWidget.style.left);
+  const top = parseFloat(todoWidget.style.top);
+  
   const position = {
-    x: parseInt(todoWidget.style.left),
-    y: parseInt(todoWidget.style.top)
+    x: isNaN(left) ? 20 : Math.round(left),
+    y: isNaN(top) ? 20 : Math.round(top)
   };
   
+  // Save position to storage
   chrome.storage.local.set({ position: position });
   
   // Add a small delay before resetting isDragging to prevent accidental expansion
@@ -980,31 +1038,65 @@ function stopDrag(e) {
 function toggleMinimize() {
   isMinimized = !isMinimized;
   
+  // Store current position before minimizing/expanding
+  const currentLeft = todoWidget.style.left;
+  const currentTop = todoWidget.style.top;
+  
   if (isMinimized) {
     todoWidget.classList.add('sticky-todo-minimizing');
     todoWidget.classList.add('sticky-todo-minimized');
+    
+    // Handle transparency when minimizing
+    if (transparencyEnabled) {
+      todoWidget.classList.add('transparency-enabled');
+      // Reset last interaction time
+      lastInteractionTime = Date.now();
+      // Remove inactive state initially
+      todoWidget.classList.remove('inactive');
+      // Start inactivity timer
+      startInactivityTimer();
+      // Add mouse movement listener for transparency
+      document.addEventListener('mousemove', handleUserInteraction);
+    }
+    
     setTimeout(() => {
       todoWidget.classList.remove('sticky-todo-minimizing');
       // Setup transparency mode when minimized
       setupTransparencyMode();
-    }, 300);
+      
+      // Ensure position is preserved after animation
+      if (currentLeft && currentTop) {
+        todoWidget.style.left = currentLeft;
+        todoWidget.style.top = currentTop;
+      }
+    }, 400); // Match animation duration from CSS (0.4s)
   } else {
-    // Add animation class for expanding
-    todoWidget.classList.add('sticky-todo-expanding');
-    todoWidget.classList.remove('sticky-todo-minimized');
-    // Remove transparency classes
+    // When expanding, remove transparency classes
     todoWidget.classList.remove('transparency-enabled');
     todoWidget.classList.remove('inactive');
-    // Remove event listener for transparency
+    
+    // Remove transparency-related event listeners
     document.removeEventListener('mousemove', handleUserInteraction);
+    
     // Clear inactivity timer
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
       inactivityTimer = null;
     }
+    
+    // Add animation class for expanding
+    todoWidget.classList.add('sticky-todo-expanding');
+    todoWidget.classList.remove('sticky-todo-minimized');
+    
     setTimeout(() => {
       todoWidget.classList.remove('sticky-todo-expanding');
-    }, 300);
+      
+      // Ensure position is preserved after animation
+      if (currentLeft && currentTop) {
+        todoWidget.style.left = currentLeft;
+        todoWidget.style.top = currentTop;
+      }
+    }, 400); // Match animation duration from CSS (0.4s)
   }
   
   updateMinimizedState();
@@ -1978,6 +2070,7 @@ function setupTransparencyMode() {
   // Load transparency setting
   safeStorageGet(['enableTransparency'], (result) => {
     transparencyEnabled = result.enableTransparency !== false; // Default to enabled
+    console.log('Transparency mode:', transparencyEnabled ? 'enabled' : 'disabled');
     
     if (transparencyEnabled && isMinimized) {
       // Add transparency class
@@ -1989,12 +2082,23 @@ function setupTransparencyMode() {
       
       // Add mouse movement listener to detect interaction
       document.addEventListener('mousemove', handleUserInteraction);
+      
+      // Also add mouseover/mouseout for more reliable detection
+      todoWidget.addEventListener('mouseover', function() {
+        todoWidget.classList.remove('inactive');
+        lastInteractionTime = Date.now();
+        
+        if (inactivityTimer) {
+          clearTimeout(inactivityTimer);
+        }
+        startInactivityTimer();
+      });
     } else {
       // Remove transparency classes
       todoWidget.classList.remove('transparency-enabled');
       todoWidget.classList.remove('inactive');
       
-      // Remove event listener
+      // Remove event listeners
       document.removeEventListener('mousemove', handleUserInteraction);
     }
   });
@@ -2007,12 +2111,12 @@ function handleUserInteraction(e) {
   // Get widget position
   const rect = todoWidget.getBoundingClientRect();
   
-  // Check if mouse is near the widget (within 100px)
+  // Check if mouse is near the widget (within 150px for better detection)
   const isNearWidget = 
-    e.clientX >= rect.left - 100 && 
-    e.clientX <= rect.right + 100 && 
-    e.clientY >= rect.top - 100 && 
-    e.clientY <= rect.bottom + 100;
+    e.clientX >= rect.left - 150 && 
+    e.clientX <= rect.right + 150 && 
+    e.clientY >= rect.top - 150 && 
+    e.clientY <= rect.bottom + 150;
   
   if (isNearWidget) {
     // Update last interaction time
@@ -2033,9 +2137,15 @@ function handleUserInteraction(e) {
 function startInactivityTimer() {
   if (!transparencyEnabled || !isMinimized) return;
   
+  // Clear any existing timer first
+  if (inactivityTimer) {
+    clearTimeout(inactivityTimer);
+  }
+  
   inactivityTimer = setTimeout(() => {
     if (todoWidget && isMinimized) {
       todoWidget.classList.add('inactive');
+      console.log('Inactivity timer triggered - widget now semi-transparent');
     }
   }, 2000); // 2 seconds of inactivity
 }
