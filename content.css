@@ -55,20 +55,135 @@
   border-radius: 50%;
   cursor: pointer !important;
   overflow: hidden;
-  background: linear-gradient(135deg, #4568DC, #B06AB3);
-  box-shadow: 0 6px 20px rgba(69, 104, 220, 0.4);
+  background: linear-gradient(135deg, #9c3bea, #7e32c2);
+  box-shadow: 0 6px 16px rgba(156, 59, 234, 0.4);
   pointer-events: all !important;
-  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+}
+
+/* Shimmer effect on the minimized button */
+.sticky-todo-minimized::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0.7;
+  animation: shimmerRotate 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmerRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Professional checkmark icon in the minimized state */
+.sticky-todo-minimized .sticky-todo-header::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 8px;
+  border-left: 3px solid white;
+  border-bottom: 3px solid white;
+  transform: translate(-50%, -60%) rotate(-45deg);
+  top: 50%;
+  left: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+/* Add a circular background to the checkmark */
+.sticky-todo-minimized .sticky-todo-header::after {
+  content: '';
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Add subtle pulse animation to minimized button */
+@keyframes subtlePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.sticky-todo-minimized:not(:hover) {
+  animation: subtlePulse 3s ease-in-out infinite;
+}
+
+/* Override pulse animation when hovering */
+.sticky-todo-minimized:hover {
+  animation: none;
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(156, 59, 234, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  opacity: 1 !important; /* Always fully visible on hover, even when transparency is enabled */
+}
+
+/* Disable animations when setting is enabled */
+.animations-disabled .sticky-todo-minimized {
+  animation: none !important;
+  transition: none !important;
+}
+
+.animations-disabled .sticky-todo-minimized::before {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-widget.sticky-todo-minimized.has-incomplete::before {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.animations-disabled .sticky-todo-header {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-minimizing,
+.animations-disabled .sticky-todo-expanding,
+.animations-disabled .sticky-todo-showing,
+.animations-disabled .sticky-todo-hiding {
+  animation: none !important;
+  transition: none !important;
+}
+
+.animations-disabled .sticky-todo-sync-indicator {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-reload-spinning {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-item-new {
+  animation: none !important;
+}
+
+.animations-disabled .sticky-todo-item-removing {
+  animation: none !important;
 }
 
 /* Make the minimized state more interactive */
-.sticky-todo-minimized:hover {
-  transform: scale(1.1);
-  box-shadow: 0 8px 25px rgba(69, 104, 220, 0.5);
-}
-
 .sticky-todo-minimized:active {
   transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(156, 59, 234, 0.3);
+}
+
+/* Hide title in minimized state */
+.sticky-todo-minimized .sticky-todo-title {
+  opacity: 0;
+  visibility: hidden;
 }
 
 /* Make all children of minimized widget clickable */
@@ -87,16 +202,16 @@
   justify-content: center !important;
   align-items: center !important;
   cursor: pointer !important;
+  background: transparent !important;
 }
 
-/* Animation for minimizing */
+/* Smooth animations for minimizing/expanding */
 .sticky-todo-minimizing {
-  animation: minimizeAnimation 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: minimizeAnimation 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Animation for expanding */
 .sticky-todo-expanding {
-  animation: expandAnimation 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: expandAnimation 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes minimizeAnimation {
@@ -116,7 +231,7 @@
 }
 
 /* Status indicator for minimized state with enhanced animation */
-.sticky-todo-widget.sticky-todo-minimized.has-incomplete::after {
+.sticky-todo-widget.sticky-todo-minimized.has-incomplete::before {
   content: '';
   position: absolute;
   width: 14px;
@@ -128,6 +243,7 @@
   border: 2px solid white;
   animation: pulse 2s infinite;
   box-shadow: 0 0 10px rgba(255, 90, 95, 0.6);
+  z-index: 10; /* Ensure it's above the shimmer effect */
 }
 
 @keyframes pulse {
@@ -647,46 +763,14 @@
 
 /* Transparency mode for minimized widget */
 .sticky-todo-minimized.transparency-enabled {
-  transition: opacity 0.5s ease-in-out, transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), width 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), height 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), border-radius 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-.sticky-todo-minimized.transparency-enabled.inactive {
-  opacity: 0.5;
-}
-
-.sticky-todo-minimized.transparency-enabled:hover {
+  transition: opacity 0.5s ease-in-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease !important;
   opacity: 1;
 }
 
-/* Disable animations when setting is enabled */
-.animations-disabled .sticky-todo-widget.sticky-todo-minimized.has-incomplete::after {
-  animation: none !important;
-  box-shadow: none !important;
+.sticky-todo-minimized.transparency-enabled.inactive {
+  opacity: 0.5 !important;
 }
 
-.animations-disabled .sticky-todo-header {
-  animation: none !important;
-}
-
-.animations-disabled .sticky-todo-minimizing,
-.animations-disabled .sticky-todo-expanding,
-.animations-disabled .sticky-todo-showing,
-.animations-disabled .sticky-todo-hiding {
-  animation: none !important;
-}
-
-.animations-disabled .sticky-todo-sync-indicator {
-  animation: none !important;
-}
-
-.animations-disabled .sticky-todo-reload-spinning {
-  animation: none !important;
-}
-
-.animations-disabled .sticky-todo-item-new {
-  animation: none !important;
-}
-
-.animations-disabled .sticky-todo-item-removing {
-  animation: none !important;
+.sticky-todo-minimized.transparency-enabled:hover {
+  opacity: 1 !important;
 }
