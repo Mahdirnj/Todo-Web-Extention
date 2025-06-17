@@ -1767,6 +1767,25 @@ function initializeTodoWidget() {
   }
 }
 
+// Toggle visibility of the todo widget
+function toggleWidgetVisibility() {
+  if (isVisible) {
+    hideTodoWidget();
+  } else {
+    showTodoWidget();
+  }
+}
+
+// Add keyboard shortcut (Ctrl+X) to toggle widget visibility
+document.addEventListener('keydown', function(event) {
+  // Check if Ctrl+X was pressed
+  if (event.ctrlKey && event.key === 'x') {
+    toggleWidgetVisibility();
+    // Prevent default browser behavior for this key combination
+    event.preventDefault();
+  }
+});
+
 // Listen for messages from background script
 try {
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
