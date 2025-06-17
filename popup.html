@@ -154,6 +154,72 @@
       color: #7F53AC;
       font-weight: 600;
     }
+    
+    /* Dark mode for popup */
+    body.dark-mode {
+      background: #282a36;
+      color: #f8f8f2;
+    }
+    
+    body.dark-mode .popup-container {
+      background: #282a36;
+    }
+    
+    body.dark-mode .header {
+      background: linear-gradient(135deg, #614385, #516395);
+    }
+    
+    body.dark-mode .content {
+      color: #f8f8f2;
+    }
+    
+    body.dark-mode .toggle-btn {
+      background: #6272a4;
+    }
+    
+    body.dark-mode .toggle-btn:hover {
+      background: #7687d4;
+    }
+    
+    body.dark-mode .option-section,
+    body.dark-mode .site-specific,
+    body.dark-mode .info {
+      border-color: #44475a;
+    }
+    
+    body.dark-mode .option-row label {
+      color: #f8f8f2;
+    }
+    
+    body.dark-mode .option-description,
+    body.dark-mode .help-text,
+    body.dark-mode .info {
+      color: #bbb;
+    }
+    
+    body.dark-mode .shortcut {
+      background: #44475a;
+      color: #f8f8f2;
+    }
+    
+    body.dark-mode .site-input {
+      background: #383a4a;
+      border-color: #44475a;
+      color: #f8f8f2;
+    }
+    
+    body.dark-mode .site-input:focus {
+      border-color: #6272a4;
+      box-shadow: 0 0 0 2px rgba(98, 114, 164, 0.3);
+    }
+    
+    body.dark-mode .important {
+      color: #bd93f9;
+    }
+    
+    body.dark-mode .site-specific-header label {
+      color: #f8f8f2;
+    }
   </style>
 </head>
 <body>
@@ -197,6 +263,14 @@
         <div class="option-description">
           Turn off task reminder animations and red dot notification
         </div>
+        
+        <div class="option-row">
+          <input type="checkbox" id="darkMode" />
+          <label for="darkMode">Dark Mode</label>
+        </div>
+        <div class="option-description">
+          Use dark color scheme for the widget and popup
+        </div>
       </div>
       
       <div class="site-specific">
@@ -235,6 +309,7 @@
           <li><span class="important">Double-click</span> on the circle to open the widget</li>
           <li>A red dot indicates pending tasks</li>
           <li><span class="important">Site-specific tasks</span> appear only on matching websites</li>
+          <li>Press <span class="shortcut">Ctrl+X</span> to toggle widget visibility</li>
         </ul>
       </div>
     </div>

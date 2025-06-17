@@ -2,6 +2,11 @@
 let todoWidget = null;
 let isDragging = false;
 let dragOffset = { x: 0, y: 0 };
+let dragStart = 0;  // Timestamp when drag started
+let startX = 0;     // Initial X position when drag started
+let startY = 0;     // Initial Y position when drag started
+let lastX = 0;      // Last known X position during drag
+let lastY = 0;      // Last known Y position during drag
 let todos = [];
 let isMinimized = false;
 let isVisible = true;
@@ -32,6 +37,7 @@ let inactivityTimer = null;
 let lastInteractionTime = Date.now();
 let transparencyEnabled = true;
 let animationsDisabled = false;
+let darkModeEnabled = false;
 
 // This function checks if the extension context is valid and sets up reconnection if needed
 function ensureValidContext() {
@@ -528,6 +534,10 @@ function createTodoWidget() {
   todoWidget.id = 'sticky-todo-widget';
   todoWidget.className = 'sticky-todo-widget';
   
+  // Initialize drag-related dataset properties
+  todoWidget.dataset.wasRealDrag = 'false';
+  todoWidget.dataset.preventExpand = 'false';
+  
   // Force LTR direction
   todoWidget.dir = 'ltr';
   todoWidget.style.direction = 'ltr';
@@ -539,6 +549,21 @@ function createTodoWidget() {
   // Set initial position - default to upper left corner if no saved position
   todoWidget.style.left = '20px';
   todoWidget.style.top = '20px';
+  
+  // Check for dark mode in localStorage for immediate application
+  try {
+    const themeKey = 'stickyTodoWidgetTheme';
+    const themeData = localStorage.getItem(themeKey);
+    if (themeData) {
+      const parsedData = JSON.parse(themeData);
+      if (parsedData && parsedData.darkMode === true) {
+        darkModeEnabled = true;
+        todoWidget.classList.add('sticky-todo-dark-mode');
+      }
+    }
+  } catch (e) {
+    console.error('Error reading theme from localStorage:', e);
+  }
   
   // Create header with title and controls
   const header = document.createElement('div');
@@ -733,74 +758,97 @@ function createTodoWidget() {
     console.error('Error reading from localStorage:', e);
   }
   
-  // Add to body with correct initial state
+  // Check if we have stored position in localStorage
+  try {
+    const positionKey = 'stickyTodoWidgetPosition';
+    const positionData = localStorage.getItem(positionKey);
+    if (positionData) {
+      const position = JSON.parse(positionData);
+      if (position && typeof position.x === 'number' && typeof position.y === 'number') {
+        todoWidget.style.left = `${position.x}px`;
+        todoWidget.style.top = `${position.y}px`;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading position from localStorage:', e);
+  }
+  
+  // Add to body with correct initial state (but don't make visible yet)
+  todoWidget.style.opacity = '0';
   document.body.appendChild(todoWidget);
   
-  // Get stored position and state
-  chrome.storage.local.get(['position', 'isMinimized', 'isVisible', 'syncStateAcrossTabs'], (result) => {
-    // Apply saved position if available, otherwise keep default
-    if (result.position && typeof result.position === 'object') {
-      // Ensure we have valid numbers
-      if (typeof result.position.x === 'number' && !isNaN(result.position.x) &&
-          typeof result.position.y === 'number' && !isNaN(result.position.y)) {
-        todoWidget.style.left = `${result.position.x}px`;
-        todoWidget.style.top = `${result.position.y}px`;
-        
-        // Force a reflow to ensure position is applied immediately
-        void todoWidget.offsetWidth;
-      }
-    }
-    
-    isVisible = result.isVisible !== false; // Default to visible
-    
-    // Apply minimized state from chrome storage (this should match our localStorage check)
-    isMinimized = result.isMinimized === true;
-    if (isMinimized !== storedMinimizedState) {
-      // Update our state if localStorage and chrome.storage differ
-      if (isMinimized) {
-        todoWidget.classList.add('sticky-todo-minimized');
-      } else {
-        todoWidget.classList.remove('sticky-todo-minimized');
-      }
-    }
-    
-    if (!isVisible) {
-      todoWidget.classList.add('sticky-todo-hidden');
-    }
-    
-    // Now that the widget is fully initialized, make it visible (prevent flash of expanded state)
-    setTimeout(() => {
-      todoWidget.style.opacity = '1';
-    }, 0);
-    
-    // Apply minimized state
-    const shouldSyncState = result.syncStateAcrossTabs !== false; // Default to true
-    
-    if (shouldSyncState && result.isMinimized !== undefined) {
-      isMinimized = result.isMinimized;
-    } else if (result.isMinimized) {
-      isMinimized = true;
-    }
-    
-    if (isMinimized) {
-      todoWidget.classList.add('sticky-todo-minimized');
-      updateMinimizedState();
-    }
+  // Force a reflow to ensure positions and classes are applied immediately
+  void todoWidget.offsetWidth;
+  
+  // Make the widget visible immediately
+  requestAnimationFrame(() => {
+    todoWidget.style.opacity = '1';
   });
   
-  // Check for site-specific match and load appropriate todos
-  checkForSiteSpecificMode().then(() => {
-    // Load and render todos
-    loadTodos();
-  });
+  // Only perform storage operations after the widget is visible
+  // This prevents slowing down the initial render
+  setTimeout(() => {
+    // Get stored position and state from chrome storage
+    chrome.storage.local.get(['position', 'isMinimized', 'isVisible', 'syncStateAcrossTabs'], (result) => {
+      // Apply saved position if available, otherwise keep default
+      if (result.position && typeof result.position === 'object') {
+        // Ensure we have valid numbers
+        if (typeof result.position.x === 'number' && !isNaN(result.position.x) &&
+            typeof result.position.y === 'number' && !isNaN(result.position.y)) {
+          todoWidget.style.left = `${result.position.x}px`;
+          todoWidget.style.top = `${result.position.y}px`;
+          
+          // Store position in localStorage for immediate access on next page load
+          try {
+            const positionKey = 'stickyTodoWidgetPosition';
+            localStorage.setItem(positionKey, JSON.stringify(result.position));
+          } catch (e) {
+            console.error('Error saving position to localStorage:', e);
+          }
+        }
+      }
+      
+      isVisible = result.isVisible !== false; // Default to visible
+      
+      // Apply minimized state from chrome storage (this should match our localStorage check)
+      isMinimized = result.isMinimized === true;
+      if (isMinimized !== storedMinimizedState) {
+        // Update our state if localStorage and chrome.storage differ
+        if (isMinimized) {
+          todoWidget.classList.add('sticky-todo-minimized');
+        } else {
+          todoWidget.classList.remove('sticky-todo-minimized');
+        }
+      }
+      
+      if (!isVisible) {
+        todoWidget.classList.add('sticky-todo-hidden');
+      }
+      
+      // Apply minimized state
+      const shouldSyncState = result.syncStateAcrossTabs !== false; // Default to true
+      
+      if (shouldSyncState && result.isMinimized !== undefined) {
+        isMinimized = result.isMinimized;
+      } else if (result.isMinimized) {
+        isMinimized = true;
+      }
+      
+      if (isMinimized) {
+        todoWidget.classList.add('sticky-todo-minimized');
+        updateMinimizedState();
+      }
+    });
+    
+    // Check for site-specific match and load appropriate todos
+    checkForSiteSpecificMode().then(() => {
+      // Load and render todos
+      loadTodos();
+    });
+  }, 0);
   
   // Setup fullscreen detection
   setupFullscreenDetection();
-  
-  // After creating the widget, setup transparency and animations modes
-  setupTransparencyMode();
-  setupAnimationsMode();
-  setupSettingsListener();
 }
 
 // Check if current site should use site-specific mode
@@ -894,14 +942,19 @@ function switchTaskMode(mode) {
 
 // Handle click on the widget
 function handleWidgetClick(e) {
-  // Only handle clicks if minimized and not dragging
-  if (isMinimized && !isDragging) {
+  // First check if we're in a drag state or preventing expansion
+  if (isDragging || todoWidget.dataset.wasRealDrag === 'true' || todoWidget.dataset.preventExpand === 'true') {
+    return; // Don't do anything during drag or right after drag
+  }
+  
+  // Only handle clicks if minimized
+  if (isMinimized) {
     // Don't expand if clicking on a button
     if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
       return;
     }
     
-    // If it's a click on the widget or header, expand
+    // If it's a clean click on the widget or header, expand
     expandTodoWidget();
   }
 }
@@ -951,6 +1004,11 @@ function startDrag(e) {
   }
   
   isDragging = true;
+  dragStart = Date.now(); // Record start time for drag vs. click detection
+  startX = e.clientX;     // Record initial X position
+  startY = e.clientY;     // Record initial Y position
+  lastX = e.clientX;      // Initialize last position
+  lastY = e.clientY;      // Initialize last position
   
   // Ensure widget has fixed position style
   todoWidget.style.position = 'fixed';
@@ -969,15 +1027,27 @@ function startDrag(e) {
   document.addEventListener('mousemove', onDrag);
   document.addEventListener('mouseup', stopDrag);
   
+  // Change cursor during drag
+  document.body.style.cursor = 'grabbing';
+  
   // Prevent text selection during drag
   e.preventDefault();
   e.stopPropagation();
 }
 
-// Handle drag movement
+// Track if we're actually moving during drag
 function onDrag(e) {
   if (isDragging && todoWidget) {
     try {
+      // Update last known position
+      lastX = e.clientX;
+      lastY = e.clientY;
+      
+      // If we've moved more than 3px in any direction, mark as an actual drag
+      if (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3) {
+        todoWidget.dataset.wasRealDrag = 'true';
+      }
+      
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
       
@@ -1009,33 +1079,81 @@ function onDrag(e) {
 function stopDrag(e) {
   if (!isDragging) return;
   
-  // Remove event listeners
+  // Get the real drag status before clearing variables
+  const wasRealDrag = todoWidget.dataset.wasRealDrag === 'true';
+  
+  // Remove event listeners first to prevent any additional events
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', stopDrag);
   
-  // Re-enable transitions
+  // Calculate drag time and distance
+  const dragEnd = Date.now();
+  const dragTime = dragEnd - dragStart;
+  const dragDistanceX = Math.abs(startX - lastX);
+  const dragDistanceY = Math.abs(startY - lastY);
+  
+  // Restore transitions
   todoWidget.style.transition = '';
   
-  // Save position - ensure we have valid integers
-  const left = parseFloat(todoWidget.style.left);
-  const top = parseFloat(todoWidget.style.top);
+  // Reset cursor
+  document.body.style.cursor = '';
   
-  const position = {
-    x: isNaN(left) ? 20 : Math.round(left),
-    y: isNaN(top) ? 20 : Math.round(top)
-  };
+  // Check if this was a significant drag (more than 5px or 200ms)
+  const wasDragging = wasRealDrag || dragTime > 200 || dragDistanceX > 5 || dragDistanceY > 5;
   
-  // Save position to storage
-  chrome.storage.local.set({ position: position });
+  if (wasDragging) {
+    // This was a drag operation, not a click
+    
+    // Get current position
+    const x = parseInt(todoWidget.style.left);
+    const y = parseInt(todoWidget.style.top);
+    
+    // Save position
+    chrome.storage.local.set({ position: { x, y } });
+    
+    // Also save to localStorage for immediate access on next page load
+    try {
+      const positionKey = 'stickyTodoWidgetPosition';
+      localStorage.setItem(positionKey, JSON.stringify({ x, y }));
+    } catch (e) {
+      console.error('Error saving position to localStorage:', e);
+    }
+    
+    // Set flag to prevent expansion on release
+    todoWidget.dataset.preventExpand = 'true';
+    
+    // If minimized, force it to stay minimized
+    if (isMinimized) {
+      // Prevent any expansion
+      todoWidget.classList.add('sticky-todo-minimized');
+      todoWidget.classList.remove('sticky-todo-expanding');
+      
+      // Add a slight delay before allowing expansion again
+      setTimeout(() => {
+        todoWidget.dataset.preventExpand = 'false';
+      }, 300);
+    }
+  } else if (isMinimized && !wasRealDrag) {
+    // Only toggle if it was a clean click (not a drag) on a minimized widget
+    toggleMinimize();
+  }
   
-  // Add a small delay before resetting isDragging to prevent accidental expansion
-  setTimeout(() => {
-    isDragging = false;
-  }, 100);
+  // Clear the real drag flag
+  todoWidget.dataset.wasRealDrag = 'false';
+  
+  // Set isDragging to false at the very end to prevent race conditions
+  isDragging = false;
 }
 
 // Toggle between minimized and expanded states
 function toggleMinimize() {
+  // Check if we should prevent toggling (right after a drag)
+  if (todoWidget.dataset.preventExpand === 'true') {
+    // Clear the prevention flag but don't toggle this time
+    todoWidget.dataset.preventExpand = 'false';
+    return;
+  }
+  
   isMinimized = !isMinimized;
   
   // Store current position before minimizing/expanding
@@ -1182,6 +1300,18 @@ function hideTodoWidget() {
       chrome.storage.local.set({ isVisible: false });
     }, 300);
   }
+  
+  // Also store in localStorage for immediate access on next page load
+  try {
+    const storageKey = 'stickyTodoWidgetVisibility';
+    const stateData = JSON.stringify({
+      isVisible: false,
+      timestamp: Date.now()
+    });
+    localStorage.setItem(storageKey, stateData);
+  } catch (e) {
+    console.error('Error saving visibility to localStorage:', e);
+  }
 }
 
 // Show the widget (unhide)
@@ -1207,6 +1337,18 @@ function showTodoWidget() {
   
   isVisible = true;
   chrome.storage.local.set({ isVisible: true });
+  
+  // Also store in localStorage for immediate access on next page load
+  try {
+    const storageKey = 'stickyTodoWidgetVisibility';
+    const stateData = JSON.stringify({
+      isVisible: true,
+      timestamp: Date.now()
+    });
+    localStorage.setItem(storageKey, stateData);
+  } catch (e) {
+    console.error('Error saving visibility to localStorage:', e);
+  }
 }
 
 // Add a new todo
@@ -1559,185 +1701,109 @@ function setupCrossBrowserSync() {
           }
         }
         
-        // Global todos changed
-        if (changes.timestamp && changes.todos && 
-            (currentSiteMode === 'global' || !document.getElementById('siteModeBtn') || 
-             document.getElementById('siteModeBtn').style.display === 'none' ||
-             (document.getElementById('globalModeBtn') && 
-              window.getComputedStyle(document.getElementById('globalModeBtn')).backgroundColor === 'rgb(127, 83, 172)'))) {
-          
-          const newTimestamp = changes.timestamp.newValue;
-          const newTodos = changes.todos.newValue;
-          
-          // Only update if the incoming change is newer than our last update
-          if (newTimestamp > lastUpdateTimestamp) {
-            console.log('Sync: Detected newer global tasks from another tab', newTodos);
-            
-            // Only merge if we're in global mode
-            if (currentSiteMode === 'global' || !document.getElementById('siteModeBtn') || 
-                document.getElementById('siteModeBtn').style.display === 'none' ||
-                (document.getElementById('globalModeBtn') && 
-                 window.getComputedStyle(document.getElementById('globalModeBtn')).backgroundColor === 'rgb(127, 83, 172)')) {
-              mergeTodos(newTodos);
-              lastUpdateTimestamp = newTimestamp;
-              showSyncAnimation(); // Show sync animation
-            }
-          }
+        // Sync dark mode setting
+        if (changes.darkMode && todoWidget) {
+          darkModeEnabled = changes.darkMode.newValue === true;
+          applyDarkMode();
         }
         
-        // Site-specific todos changed
-        if (changes.siteTodos && changes.timestamp) {
-          const newTimestamp = changes.timestamp.newValue;
-          const allSiteTodos = changes.siteTodos.newValue;
-          
-          // Only update if newer and we have a current site mode that matches
-          if (newTimestamp > lastUpdateTimestamp && currentSiteMode !== 'global' && 
-              allSiteTodos && allSiteTodos[currentSiteMode] && 
-              document.getElementById('siteModeBtn') && 
-              window.getComputedStyle(document.getElementById('siteModeBtn')).backgroundColor === 'rgb(127, 83, 172)') {
-            
-            console.log('Sync: Detected newer site-specific tasks from another tab', allSiteTodos[currentSiteMode]);
-            mergeTodos(allSiteTodos[currentSiteMode]);
-            lastUpdateTimestamp = newTimestamp;
-            showSyncAnimation(); // Show sync animation
-          }
+        // Sync transparency setting
+        if (changes.enableTransparency && todoWidget) {
+          transparencyEnabled = changes.enableTransparency.newValue !== false;
+          setupTransparencyMode();
+        }
+        
+        // Sync animations setting
+        if (changes.disableAnimations && todoWidget) {
+          animationsDisabled = changes.disableAnimations.newValue === true;
+          setupAnimationsMode();
         }
       }
     });
   } catch (error) {
-    console.error('Error setting up storage listener:', error);
-  }
-  
-  // Also set up a periodic check as backup (every 3 seconds)
-  setInterval(checkForUpdates, 3000);
-}
-
-// Check for updates from storage with optional force parameter
-function checkForUpdates(force = false) {
-  try {
-    // Determine which type of todos to check for updates
-    if (currentSiteMode === 'global' || !document.getElementById('siteModeBtn') || 
-        document.getElementById('siteModeBtn').style.display === 'none' ||
-        (document.getElementById('globalModeBtn') && 
-         window.getComputedStyle(document.getElementById('globalModeBtn')).backgroundColor === 'rgb(127, 83, 172)')) {
-      
-      // Check for global todos updates - use safeStorageGet instead of direct chrome.storage.local.get
-      safeStorageGet(['todos', 'timestamp'], (result) => {
-        if (!result) return; // Safety check
-        
-        // Debug logging
-        console.log('Polling for global updates. Current timestamp:', lastUpdateTimestamp, 'Storage timestamp:', result.timestamp);
-        
-        // Only update if the storage data is newer than what we have or if forced
-        if (result.todos && ((result.timestamp && result.timestamp > lastUpdateTimestamp) || force)) {
-          console.log('Sync: Found newer global tasks via polling', result.todos);
-          
-          // Merge rather than replace
-          mergeTodos(result.todos);
-          
-          if (result.timestamp) {
-            lastUpdateTimestamp = result.timestamp;
-          }
-          showSyncAnimation(); // Show sync animation
-        }
-      });
-    } else if (currentSiteMode !== 'global') {
-      // Check for site-specific todos updates - use safeStorageGet instead of direct chrome.storage.local.get
-      safeStorageGet(['siteTodos', 'timestamp'], (result) => {
-        if (!result) return; // Safety check
-        
-        // Debug logging
-        console.log('Polling for site-specific updates for', currentSiteMode, 'Current timestamp:', lastUpdateTimestamp, 'Storage timestamp:', result.timestamp);
-        
-        const allSiteTodos = result.siteTodos || {};
-        
-        // Only update if the storage data is newer than what we have or if forced
-        if (allSiteTodos[currentSiteMode] && ((result.timestamp && result.timestamp > lastUpdateTimestamp) || force)) {
-          console.log('Sync: Found newer site-specific tasks via polling', allSiteTodos[currentSiteMode]);
-          
-          // Merge rather than replace
-          mergeTodos(allSiteTodos[currentSiteMode]);
-          
-          if (result.timestamp) {
-            lastUpdateTimestamp = result.timestamp;
-          }
-          showSyncAnimation(); // Show sync animation
-        }
-      });
-    }
-  } catch (error) {
-    console.error('Error checking for updates:', error);
+    console.error('Error setting up storage change listener:', error);
     reportError(error);
-    
-    // If we catch an error here, it might be due to context invalidation
-    // Trigger a check of the extension context
-    setTimeout(checkExtensionContext, 100);
   }
-}
-
-// Intelligently merge todos from different tabs
-function mergeTodos(incomingTodos) {
-  if (!incomingTodos || !Array.isArray(incomingTodos)) return;
-  
-  // Create map of existing todos by ID for quick lookup
-  const existingTodosMap = {};
-  todos.forEach(todo => {
-    existingTodosMap[todo.id] = todo;
-  });
-  
-  // Track IDs from both sets
-  const allIds = new Set();
-  todos.forEach(todo => allIds.add(todo.id));
-  incomingTodos.forEach(todo => allIds.add(todo.id));
-  
-  // Create new merged array
-  const mergedTodos = [];
-  
-  // Process all IDs
-  allIds.forEach(id => {
-    const existingTodo = existingTodosMap[id];
-    const incomingTodo = incomingTodos.find(t => t.id === id);
-    
-    // Case 1: Todo exists in both sets
-    if (existingTodo && incomingTodo) {
-      // If completion status different, prefer the completed one
-      // This ensures a completed task in any tab is reflected everywhere
-      if (existingTodo.completed !== incomingTodo.completed) {
-        mergedTodos.push(incomingTodo.completed ? incomingTodo : existingTodo);
-      } else {
-        // If completion status same, keep the one with newer text if different
-        mergedTodos.push(incomingTodo);
-      }
-    } 
-    // Case 2: Todo only in incoming set (new todo from another tab)
-    else if (incomingTodo) {
-      mergedTodos.push(incomingTodo);
-    } 
-    // Case 3: Todo only in existing set (deleted in another tab)
-    else if (existingTodo) {
-      mergedTodos.push(existingTodo);
-    }
-  });
-  
-  // Update todos and render
-  todos = mergedTodos;
-  renderTodos();
 }
 
 // Check visibility setting and initialize
 function initializeTodoWidget() {
   try {
-    safeStorageGet(['isVisible', 'enableTransparency', 'disableAnimations'], (result) => {
+    // First check localStorage for immediate visibility info (synchronous)
+    let shouldCreateWidget = true;
+    try {
+      const storageKey = 'stickyTodoWidgetVisibility';
+      const storedData = localStorage.getItem(storageKey);
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        if (parsedData && parsedData.isVisible === false) {
+          shouldCreateWidget = false;
+          isVisible = false;
+        } else {
+          isVisible = true;
+        }
+      } else {
+        isVisible = true; // Default to visible if no stored data
+      }
+    } catch (e) {
+      console.error('Error reading visibility from localStorage:', e);
+      isVisible = true; // Default to visible on error
+    }
+    
+    // Create widget immediately if it should be visible
+    if (shouldCreateWidget) {
+      createTodoWidget();
+      
+      // Make widget visible immediately
+      if (todoWidget) {
+        todoWidget.style.opacity = '1';
+      }
+    }
+    
+    // Then load all settings asynchronously to apply them
+    safeStorageGet(['isVisible', 'enableTransparency', 'disableAnimations', 'darkMode'], (result) => {
       if (!result) {
-        // If we can't get the result, assume visible by default
-        isVisible = true;
+        // If we can't get the result, use defaults
         transparencyEnabled = true;
         animationsDisabled = false;
+        darkModeEnabled = false;
         console.warn('Could not retrieve settings, using defaults');
       } else {
+        // Update visibility based on storage (more authoritative than localStorage)
         isVisible = result.isVisible !== false; // Default to visible
+        
+        // Store the visibility state in localStorage for future quick access
+        try {
+          const storageKey = 'stickyTodoWidgetVisibility';
+          const stateData = JSON.stringify({
+            isVisible: isVisible,
+            timestamp: Date.now()
+          });
+          localStorage.setItem(storageKey, stateData);
+        } catch (e) {
+          console.error('Error saving visibility to localStorage:', e);
+        }
+        
+        // Create or remove widget based on updated visibility
+        if (isVisible && !todoWidget) {
+          createTodoWidget();
+        } else if (!isVisible && todoWidget) {
+          hideTodoWidget();
+        }
+        
+        // Update other settings
         transparencyEnabled = result.enableTransparency !== false; // Default to enabled
         animationsDisabled = result.disableAnimations === true; // Default to disabled
+        darkModeEnabled = result.darkMode === true; // Default to disabled
+        
+        // Apply settings to existing widget
+        if (todoWidget) {
+          setupTransparencyMode();
+          setupAnimationsMode();
+          setupDarkMode();
+          setupSettingsListener();
+          setupCrossBrowserSync();
+        }
       }
       
       // Apply animations setting to document body
@@ -1745,11 +1811,6 @@ function initializeTodoWidget() {
         document.body.classList.add('animations-disabled');
       } else {
         document.body.classList.remove('animations-disabled');
-      }
-      
-      if (isVisible) {
-        createTodoWidget();
-        setupCrossBrowserSync(); // Set up synchronization
       }
     });
   } catch (error) {
@@ -1760,10 +1821,11 @@ function initializeTodoWidget() {
     isVisible = true;
     transparencyEnabled = true;
     animationsDisabled = false;
+    darkModeEnabled = false;
     setTimeout(() => {
       createTodoWidget();
       setupCrossBrowserSync();
-    }, 500);
+    }, 100); // Reduced from 500ms to 100ms for faster fallback
   }
 }
 
@@ -1809,37 +1871,24 @@ try {
       // Handle minimized state changes from other tabs
       if (request.action === 'minimizedStateChanged' && todoWidget) {
         safeStorageGet(['syncStateAcrossTabs'], (result) => {
-          const shouldSyncState = result.syncStateAcrossTabs !== false; // Default to true
+          const shouldSyncState = result.syncStateAcrossTabs !== false;
           
-          if (shouldSyncState && request.isMinimized !== isMinimized) {
-            console.log('Received minimized state change:', request.isMinimized);
-            
-            // Apply the state without animation
-            isMinimized = request.isMinimized;
-            if (isMinimized) {
-              todoWidget.classList.add('sticky-todo-minimized');
-              // Remove any transition animations to prevent flashing
-              todoWidget.classList.remove('sticky-todo-minimizing');
-              todoWidget.classList.remove('sticky-todo-expanding');
-            } else {
-              todoWidget.classList.remove('sticky-todo-minimized');
-              // Remove any transition animations to prevent flashing
-              todoWidget.classList.remove('sticky-todo-minimizing');
-              todoWidget.classList.remove('sticky-todo-expanding');
-            }
-            
-            updateMinimizedState();
-            
-            // Save to localStorage for immediate access on next page load
-            try {
-              const storageKey = 'stickyTodoWidgetState';
-              const stateData = JSON.stringify({
-                isMinimized: isMinimized,
-                timestamp: Date.now()
-              });
-              localStorage.setItem(storageKey, stateData);
-            } catch (e) {
-              console.error('Error saving to localStorage:', e);
+          if (shouldSyncState) {
+            // Check if this is a recent change from another tab
+            const timestamp = request.timestamp || Date.now();
+            if (timestamp > lastUpdateTimestamp - 1000) { // Allow 1 second buffer for potential race conditions
+              console.log('Applying minimized state change from another tab:', request.isMinimized);
+              
+              // Apply the minimized state
+              isMinimized = request.isMinimized;
+              if (isMinimized) {
+                todoWidget.classList.add('sticky-todo-minimized');
+              } else {
+                todoWidget.classList.remove('sticky-todo-minimized');
+              }
+              
+              // Update minimized state UI
+              updateMinimizedState();
             }
           }
           
@@ -1848,56 +1897,39 @@ try {
         return true;
       }
       
-      // Handle settings changes
-      if (request.action === 'settingChanged' && todoWidget) {
-        console.log('Setting changed:', request.setting, request.value);
-        
-        if (request.setting === 'hideInFullscreen') {
-          // Check if we need to update visibility based on current fullscreen state
-          if (isInFullscreen) {
-            checkFullscreenState();
-          }
-        }
-        
+      // Handle dark mode changes
+      if (request.action === 'settingChanged' && request.setting === 'darkMode' && todoWidget) {
+        console.log('Dark mode setting changed:', request.value);
+        darkModeEnabled = request.value === true;
+        applyDarkMode();
         sendResponse({status: 'success'});
         return true;
       }
       
       // Handle direct sync notifications from background
       if (request.action === 'todosChanged') {
-        console.log('Received sync notification from background');
-        if (todoWidget && request.timestamp) {
-          // Force a sync check
-          checkForUpdates(true);
-          sendResponse({status: 'success'});
-          return true;
+        // Check if this is a recent update, not our own
+        if (request.timestamp && request.timestamp > lastUpdateTimestamp) {
+          console.log('Received sync notification for todos, will update');
+          
+          // Wait a moment to ensure storage is consistent
+          setTimeout(() => {
+            loadTodos();
+          }, 100);
         }
+        
+        sendResponse({status: 'success'});
+        return true;
       }
-      
-      sendResponse({status: 'unknown_action'});
-      return false;
     } catch (error) {
       console.error('Error handling message:', error);
-      reportError(error);
-      sendResponse({status: 'error', message: error.toString()});
-      return false;
+      sendResponse({status: 'error', message: error.message});
     }
+    
+    return false;
   });
 } catch (error) {
-  console.error('Could not set up message listener:', error);
-  reportError(error);
-}
-
-// Modify the initialization section of your code to add try-catch blocks
-try {
-  // Initialize the widget when DOM is fully loaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeTodoWidget);
-  } else {
-    initializeTodoWidget();
-  }
-} catch (error) {
-  console.error('Error initializing Todo widget:', error);
+  console.error('Error setting up message listener:', error);
   reportError(error);
 }
 
@@ -2187,22 +2219,59 @@ function setupAnimationsMode() {
 // Listen for settings changes
 function setupSettingsListener() {
   try {
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local') {
-        // Handle transparency setting change
-        if (changes.enableTransparency) {
-          transparencyEnabled = changes.enableTransparency.newValue !== false;
-          setupTransparencyMode();
-        }
-        
-        // Handle animations setting change
-        if (changes.disableAnimations) {
-          animationsDisabled = changes.disableAnimations.newValue === true;
-          setupAnimationsMode();
-        }
-      }
-    });
+    // Initial settings setup
+    setupTransparencyMode();
+    setupAnimationsMode();
+    setupDarkMode();
+    
+    // The actual message handling is in the onMessage listener
   } catch (error) {
     console.error('Error setting up settings listener:', error);
   }
+}
+
+// Apply dark mode based on current setting
+function applyDarkMode() {
+  if (!todoWidget) return;
+  
+  if (darkModeEnabled) {
+    todoWidget.classList.add('sticky-todo-dark-mode');
+  } else {
+    todoWidget.classList.remove('sticky-todo-dark-mode');
+  }
+  
+  // Store dark mode setting in localStorage for immediate access on next page load
+  try {
+    const themeKey = 'stickyTodoWidgetTheme';
+    const themeData = JSON.stringify({
+      darkMode: darkModeEnabled,
+      timestamp: Date.now()
+    });
+    localStorage.setItem(themeKey, themeData);
+  } catch (e) {
+    console.error('Error saving theme to localStorage:', e);
+  }
+  
+  console.log('Applied dark mode:', darkModeEnabled);
+}
+
+// Setup dark mode based on stored setting
+function setupDarkMode() {
+  if (!todoWidget) return;
+  
+  safeStorageGet(['darkMode'], (result) => {
+    darkModeEnabled = result.darkMode === true; // Default to disabled
+    applyDarkMode();
+  });
+}
+
+// Initialize the widget when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    // Immediate widget creation for better performance
+    initializeTodoWidget();
+  });
+} else {
+  // Document already loaded, create widget immediately
+  initializeTodoWidget();
 }
