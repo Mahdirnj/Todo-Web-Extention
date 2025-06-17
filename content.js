@@ -705,7 +705,28 @@ function createTodoWidget() {
   // Add a global click handler for the minimized circle
   todoWidget.addEventListener('click', handleWidgetClick);
   
-  // Add to body
+  // Set initial state before adding to DOM to prevent flashing
+  // Get stored position and state synchronously to prevent flickering
+  let storedMinimizedState = false;
+  try {
+    // Check localStorage first as it's synchronous
+    const storageKey = 'stickyTodoWidgetState';
+    const storedData = localStorage.getItem(storageKey);
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      if (parsedData && parsedData.isMinimized !== undefined) {
+        storedMinimizedState = parsedData.isMinimized;
+        isMinimized = storedMinimizedState;
+        if (isMinimized) {
+          todoWidget.classList.add('sticky-todo-minimized');
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error reading from localStorage:', e);
+  }
+  
+  // Add to body with correct initial state
   document.body.appendChild(todoWidget);
   
   // Get stored position and state
@@ -717,9 +738,25 @@ function createTodoWidget() {
     
     isVisible = result.isVisible !== false; // Default to visible
     
+    // Apply minimized state from chrome storage (this should match our localStorage check)
+    isMinimized = result.isMinimized === true;
+    if (isMinimized !== storedMinimizedState) {
+      // Update our state if localStorage and chrome.storage differ
+      if (isMinimized) {
+        todoWidget.classList.add('sticky-todo-minimized');
+      } else {
+        todoWidget.classList.remove('sticky-todo-minimized');
+      }
+    }
+    
     if (!isVisible) {
       todoWidget.classList.add('sticky-todo-hidden');
     }
+    
+    // Now that the widget is fully initialized, make it visible (prevent flash of expanded state)
+    setTimeout(() => {
+      todoWidget.style.opacity = '1';
+    }, 0);
     
     // Apply minimized state
     const shouldSyncState = result.syncStateAcrossTabs !== false; // Default to true
@@ -982,6 +1019,18 @@ function toggleMinimize() {
         isMinimized: isMinimized,
         minimizedStateTimestamp: Date.now() 
       });
+      
+      // Also save to localStorage for immediate access on page load
+      try {
+        const storageKey = 'stickyTodoWidgetState';
+        const stateData = JSON.stringify({
+          isMinimized: isMinimized,
+          timestamp: Date.now()
+        });
+        localStorage.setItem(storageKey, stateData);
+      } catch (e) {
+        console.error('Error saving to localStorage:', e);
+      }
       
       console.log('Widget minimized state synced across tabs:', isMinimized);
     }
@@ -1327,6 +1376,17 @@ function createTodoElement(todo) {
   todoText.dir = 'ltr';
   todoText.style.direction = 'ltr';
   todoText.style.textAlign = 'left';
+  todoText.title = "Double-click to toggle completion";
+  
+  // Add double-click functionality to toggle completion
+  todoText.addEventListener('dblclick', (e) => {
+    e.stopPropagation(); // Prevent event bubbling
+    checkbox.checked = !checkbox.checked;
+    
+    // Trigger the change event to handle the state update
+    const changeEvent = new Event('change', { bubbles: true });
+    checkbox.dispatchEvent(changeEvent);
+  });
   
   // Add delete button
   const deleteBtn = document.createElement('button');
@@ -1647,11 +1707,29 @@ try {
             isMinimized = request.isMinimized;
             if (isMinimized) {
               todoWidget.classList.add('sticky-todo-minimized');
+              // Remove any transition animations to prevent flashing
+              todoWidget.classList.remove('sticky-todo-minimizing');
+              todoWidget.classList.remove('sticky-todo-expanding');
             } else {
               todoWidget.classList.remove('sticky-todo-minimized');
+              // Remove any transition animations to prevent flashing
+              todoWidget.classList.remove('sticky-todo-minimizing');
+              todoWidget.classList.remove('sticky-todo-expanding');
             }
             
             updateMinimizedState();
+            
+            // Save to localStorage for immediate access on next page load
+            try {
+              const storageKey = 'stickyTodoWidgetState';
+              const stateData = JSON.stringify({
+                isMinimized: isMinimized,
+                timestamp: Date.now()
+              });
+              localStorage.setItem(storageKey, stateData);
+            } catch (e) {
+              console.error('Error saving to localStorage:', e);
+            }
           }
           
           sendResponse({status: 'success'});
