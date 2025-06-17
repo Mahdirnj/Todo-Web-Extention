@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const hideInFullscreenCheckbox = document.getElementById('hideInFullscreen');
   const enableTransparencyCheckbox = document.getElementById('enableTransparency');
   const disableAnimationsCheckbox = document.getElementById('disableAnimations');
+  const darkModeCheckbox = document.getElementById('darkMode');
   const siteInputs = [
     document.getElementById('site1'),
     document.getElementById('site2'),
@@ -41,12 +42,21 @@ document.addEventListener('DOMContentLoaded', function() {
     'syncStateAcrossTabs', 
     'hideInFullscreen', 
     'enableTransparency', 
-    'disableAnimations'
+    'disableAnimations',
+    'darkMode'
   ], function(result) {
     syncStateCheckbox.checked = result.syncStateAcrossTabs !== false; // Default to enabled
     hideInFullscreenCheckbox.checked = result.hideInFullscreen !== false; // Default to enabled
     enableTransparencyCheckbox.checked = result.enableTransparency !== false; // Default to enabled
     disableAnimationsCheckbox.checked = result.disableAnimations === true; // Default to disabled
+    darkModeCheckbox.checked = result.darkMode === true; // Default to disabled
+    
+    // Apply dark mode to popup if enabled
+    if (result.darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
   });
   
   // Add click event listener to toggle button
@@ -121,6 +131,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const enabled = this.checked;
     chrome.storage.local.set({ disableAnimations: enabled }, function() {
       console.log('Disable animations setting saved:', enabled);
+    });
+  });
+  
+  // Handle dark mode checkbox change
+  darkModeCheckbox.addEventListener('change', function() {
+    const enabled = this.checked;
+    chrome.storage.local.set({ darkMode: enabled }, function() {
+      console.log('Dark mode setting saved:', enabled);
+      
+      // Apply dark mode to popup immediately
+      if (enabled) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
     });
   });
   

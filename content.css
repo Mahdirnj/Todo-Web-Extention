@@ -774,3 +774,113 @@
 .sticky-todo-minimized.transparency-enabled:hover {
   opacity: 1 !important;
 }
+
+/* Dark Mode Styles */
+.sticky-todo-dark-mode {
+  color-scheme: dark;
+}
+
+/* Main widget in dark mode */
+.sticky-todo-dark-mode.sticky-todo-widget {
+  background: rgba(30, 32, 40, 0.8);
+  border: 1px solid rgba(50, 52, 60, 0.8);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25), 0 8px 10px rgba(0, 0, 0, 0.22);
+}
+
+/* Header in dark mode */
+.sticky-todo-dark-mode .sticky-todo-header {
+  background: linear-gradient(135deg, #614385, #516395);
+}
+
+/* Content area in dark mode */
+.sticky-todo-dark-mode .sticky-todo-content,
+.sticky-todo-dark-mode .sticky-todo-input-area,
+.sticky-todo-dark-mode .sticky-todo-mode-switcher {
+  background-color: rgba(40, 42, 54, 0.7);
+  border-color: rgba(60, 62, 74, 0.5);
+}
+
+/* Todo items in dark mode */
+.sticky-todo-dark-mode .sticky-todo-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sticky-todo-dark-mode .sticky-todo-item:hover {
+  background-color: rgba(50, 52, 64, 0.6);
+}
+
+/* Todo text in dark mode */
+.sticky-todo-dark-mode .sticky-todo-text {
+  color: #e0e0e0 !important;
+}
+
+.sticky-todo-dark-mode .sticky-todo-item.completed .sticky-todo-text {
+  color: #777 !important;
+}
+
+/* Input area in dark mode */
+.sticky-todo-dark-mode .sticky-todo-input {
+  background: rgba(40, 42, 54, 0.9) !important;
+  border: 1px solid rgba(80, 82, 94, 0.5) !important;
+  color: #e0e0e0 !important;
+}
+
+.sticky-todo-dark-mode .sticky-todo-input:focus {
+  border-color: #6272a4 !important;
+  box-shadow: 0 0 0 3px rgba(98, 114, 164, 0.3) !important;
+}
+
+.sticky-todo-dark-mode .sticky-todo-input::placeholder {
+  color: #777;
+}
+
+/* Mode switcher in dark mode */
+.sticky-todo-dark-mode #globalModeBtn {
+  background-color: #6272a4;
+}
+
+.sticky-todo-dark-mode #siteModeBtn {
+  background-color: #44475a;
+  color: #e0e0e0;
+}
+
+/* Scrollbar in dark mode */
+.sticky-todo-dark-mode .sticky-todo-content::-webkit-scrollbar-track {
+  background: #2c2e3a;
+}
+
+.sticky-todo-dark-mode .sticky-todo-content::-webkit-scrollbar-thumb {
+  background: #44475a;
+}
+
+.sticky-todo-dark-mode .sticky-todo-content::-webkit-scrollbar-thumb:hover {
+  background: #6272a4;
+}
+
+/* Empty state in dark mode */
+.sticky-todo-dark-mode .sticky-todo-empty {
+  color: #777 !important;
+}
+
+/* Checkbox in dark mode */
+.sticky-todo-dark-mode .sticky-todo-checkbox {
+  background-color: #383a4a;
+  border: 1px solid #44475a;
+}
+
+.sticky-todo-dark-mode .sticky-todo-checkbox:checked {
+  background-color: #6272a4;
+  border-color: #6272a4;
+}
+
+/* Minimized state in dark mode */
+.sticky-todo-dark-mode.sticky-todo-minimized {
+  background: linear-gradient(135deg, #614385, #516395);
+  box-shadow: 0 6px 16px rgba(97, 67, 133, 0.4);
+}
+
+/* Delete button in dark mode */
+.sticky-todo-dark-mode .sticky-todo-delete:hover {
+  background-color: rgba(255, 85, 85, 0.2);
+  color: #ff5555;
+}

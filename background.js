@@ -7,6 +7,9 @@ chrome.runtime.onInstalled.addListener(() => {
     isMinimized: false,
     syncStateAcrossTabs: true, // Enable widget state sync by default
     hideInFullscreen: true, // Enable auto-hide in fullscreen by default
+    enableTransparency: true, // Enable transparency by default
+    disableAnimations: false, // Don't disable animations by default
+    darkMode: false, // Light mode by default
     siteSpecificEnabled: false,
     siteUrls: [],
     siteTodos: {},
@@ -101,6 +104,15 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         action: "settingChanged",
         setting: "syncStateAcrossTabs",
         value: changes.syncStateAcrossTabs.newValue
+      });
+    }
+    
+    // Broadcast dark mode setting changes
+    if (changes.darkMode) {
+      broadcastToAllTabs({
+        action: "settingChanged",
+        setting: "darkMode",
+        value: changes.darkMode.newValue
       });
     }
   }
