@@ -1905,6 +1905,23 @@ try {
         sendResponse({status: 'success'});
         return true;
       }
+
+      // Handle fullscreen hiding setting
+      if (request.action === 'settingChanged' && request.setting === 'hideInFullscreen') {
+        console.log('Hide in fullscreen setting changed:', request.value);
+        // Re-check fullscreen state so the new setting takes effect immediately
+        checkFullscreenState();
+        sendResponse({status: 'success'});
+        return true;
+      }
+
+      // Handle sync state setting change
+      if (request.action === 'settingChanged' && request.setting === 'syncStateAcrossTabs') {
+        console.log('Sync state across tabs setting changed:', request.value);
+        // No immediate action required; future operations will use new value
+        sendResponse({status: 'success'});
+        return true;
+      }
       
       // Handle direct sync notifications from background
       if (request.action === 'todosChanged') {
