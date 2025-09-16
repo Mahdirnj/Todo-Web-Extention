@@ -144,4 +144,3 @@ A few screenshots showing the extension in action. Click any image to view full-
 
 ---
 
-If images do not show on GitHub, ensure these files are committed and pushed to the repository root. Filenames contain spaces — GitHub will render them correctly but you can rename them (e.g. `screenshot1.png`) if you prefer cleaner URLs.
