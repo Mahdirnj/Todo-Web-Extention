@@ -93,3 +93,18 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 <div align="center">
   Made with ❤️ by <a href="https://github.com/Mahdirnj">Mahdirnj</a>
 </div>
+
+## 📷 Preview
+
+A few screenshots showing the extension in action. Click any image to view full-size on GitHub.
+
+<div align="center">
+   <a href="./Screenshot 2025-09-16 122913.png"><img src="./Screenshot 2025-09-16 122913.png" alt="Screenshot - main view" width="320" style="margin:6px;"/></a>
+   <a href="./Screenshot 2025-09-16 123020.png"><img src="./Screenshot 2025-09-16 123020.png" alt="Screenshot - minimized dot" width="320" style="margin:6px;"/></a>
+   <a href="./Screenshot 2025-09-16 123039.png"><img src="./Screenshot 2025-09-16 123039.png" alt="Screenshot - add task" width="320" style="margin:6px;"/></a>
+   <a href="./Screenshot 2025-09-16 123053.png"><img src="./Screenshot 2025-09-16 123053.png" alt="Screenshot - settings" width="320" style="margin:6px;"/></a>
+</div>
+
+---
+
+If images do not show on GitHub, ensure these files are committed and pushed to the repository root. Filenames contain spaces — GitHub will render them correctly but you can rename them (e.g. `screenshot1.png`) if you prefer cleaner URLs.
