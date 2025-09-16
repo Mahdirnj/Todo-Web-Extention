@@ -28,7 +28,7 @@
 ### Method 1: Manual Installation
 1. Download or clone this repository
    ```bash
-   git clone https://github.com/Mahdirni/Todo-Web-Extention.git
+   git clone https://github.com/Mahdirnj/Todo-Web-Extention.git
    ```
 2. Open your browser and navigate to the extensions page:
    - Edge: `edge://extensions/`
@@ -78,9 +78,6 @@ Want to contribute? Great!
    ```
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgements
 
