@@ -114,13 +114,13 @@ A few screenshots showing the extension in action. Click any image to view full-
             <a href="./Screenshot 2025-09-16 122913.png">
                <img src="./Screenshot 2025-09-16 122913.png" alt="main view" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
             </a>
-            <div style="font-size:13px;margin-top:6px;color:#444">Main view — full widget</div>
+            <div style="font-size:13px;margin-top:6px;color:#444">Minimized view — minimized widget</div>
          </td>
          <td align="center" style="padding:6px">
-            <a href="./Screenshot 2025-09-16 123020.png">
-               <img src="./Screenshot 2025-09-16 123020.png" alt="minimized dot" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+            <a href="./Screenshot 2025-09-16 124631.png">
+               <img src="./Screenshot 2025-09-16 124631.png" alt="minimized dot" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
             </a>
-            <div style="font-size:13px;margin-top:6px;color:#444">Minimized dot — collapsed state</div>
+            <div style="font-size:13px;margin-top:6px;color:#444">Full view in website</div>
          </td>
       </tr>
       <tr>
@@ -128,13 +128,13 @@ A few screenshots showing the extension in action. Click any image to view full-
             <a href="./Screenshot 2025-09-16 123039.png">
                <img src="./Screenshot 2025-09-16 123039.png" alt="add task" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
             </a>
-            <div style="font-size:13px;margin-top:6px;color:#444">Adding tasks — input & controls</div>
+            <div style="font-size:13px;margin-top:6px;color:#444">Settings & options</div>
          </td>
          <td align="center" style="padding:6px">
             <a href="./Screenshot 2025-09-16 123053.png">
                <img src="./Screenshot 2025-09-16 123053.png" alt="settings" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
             </a>
-            <div style="font-size:13px;margin-top:6px;color:#444">Settings & options</div>
+            <div style="font-size:13px;margin-top:6px;color:#444">Adding tasks — input & controls</div>
          </td>
       </tr>
    </table>
