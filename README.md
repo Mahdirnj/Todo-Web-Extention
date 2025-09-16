@@ -78,6 +78,18 @@ Want to contribute? Great!
    ```
 5. Open a Pull Request
 
+## 🐞 Known Issues & Roadmap
+
+- **Site-specific tasks not always persisted correctly**: tasks scoped per-domain may sometimes be missing, duplicated, or show up under the wrong domain after navigation or reloads.
+  - Reproduce: add tasks on one domain, navigate to another domain, add tasks there, then return or reload the first domain.
+  - Likely causes: incorrect storage keying (missing hostname/origin), race conditions during initialization, or legacy/global data formats.
+
+- **Roadmap / Enhancements**:
+  - Add a small UI to inspect and manage per-site task lists (useful for debugging and user control).
+  - Improve synchronization logic to avoid overwrites when multiple tabs are open.
+  - Add automated tests (unit and E2E) that cover cross-site persistence and race conditions.
+
+If you want me to open an issue or start a PR implementing these fixes, say the word and I will create the issue and/or a branch with an initial patch.
 
 ## 🙏 Acknowledgements
 
