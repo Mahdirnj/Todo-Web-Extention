@@ -108,31 +108,33 @@ If you want me to open an issue or start a PR implementing these fixes, say the 
 A few screenshots showing the extension in action. Click any image to view full-size on GitHub.
 
 <div align="center">
-   <table>
+   <table style="width:100%;max-width:980px;margin:0 auto;border-collapse:collapse;">
       <tr>
-         <td align="center" style="padding:6px">
-            <a href="./Screenshot 2025-09-16 122913.png">
-               <img src="./Screenshot 2025-09-16 122913.png" alt="main view" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
-            </a>
-            <div style="font-size:13px;margin-top:6px;color:#444">Minimized view — minimized widget</div>
-         </td>
-         <td align="center" style="padding:6px">
+         <td colspan="2" align="center" style="padding:6px">
             <a href="./Screenshot 2025-09-16 124631.png">
-               <img src="./Screenshot 2025-09-16 124631.png" alt="minimized dot" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+               <img src="./Screenshot 2025-09-16 124631.png" alt="full view" width="900" style="max-width:100%;height:auto;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,0.14);border:1px solid rgba(0,0,0,0.06);"/>
             </a>
-            <div style="font-size:13px;margin-top:6px;color:#444">Full view in website</div>
+            <div style="font-size:13px;margin-top:8px;color:#444">Full view in website</div>
          </td>
       </tr>
       <tr>
-         <td align="center" style="padding:6px">
+         <td align="center" style="padding:6px;width:50%">
+            <a href="./Screenshot 2025-09-16 122913.png">
+               <img src="./Screenshot 2025-09-16 122913.png" alt="minimized view" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);max-width:100%;height:auto;"/>
+            </a>
+            <div style="font-size:13px;margin-top:6px;color:#444">Minimized view — minimized widget</div>
+         </td>
+         <td align="center" style="padding:6px;width:50%">
             <a href="./Screenshot 2025-09-16 123039.png">
-               <img src="./Screenshot 2025-09-16 123039.png" alt="add task" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+               <img src="./Screenshot 2025-09-16 123039.png" alt="settings" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);max-width:100%;height:auto;"/>
             </a>
             <div style="font-size:13px;margin-top:6px;color:#444">Settings & options</div>
          </td>
-         <td align="center" style="padding:6px">
+      </tr>
+      <tr>
+         <td colspan="2" align="center" style="padding:6px">
             <a href="./Screenshot 2025-09-16 123053.png">
-               <img src="./Screenshot 2025-09-16 123053.png" alt="settings" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+               <img src="./Screenshot 2025-09-16 123053.png" alt="adding tasks" width="600" style="max-width:100%;height:auto;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
             </a>
             <div style="font-size:13px;margin-top:6px;color:#444">Adding tasks — input & controls</div>
          </td>
