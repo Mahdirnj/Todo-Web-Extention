@@ -108,10 +108,36 @@ If you want me to open an issue or start a PR implementing these fixes, say the 
 A few screenshots showing the extension in action. Click any image to view full-size on GitHub.
 
 <div align="center">
-   <a href="./Screenshot 2025-09-16 122913.png"><img src="./Screenshot 2025-09-16 122913.png" alt="Screenshot - main view" width="320" style="margin:6px;"/></a>
-   <a href="./Screenshot 2025-09-16 123020.png"><img src="./Screenshot 2025-09-16 123020.png" alt="Screenshot - minimized dot" width="320" style="margin:6px;"/></a>
-   <a href="./Screenshot 2025-09-16 123039.png"><img src="./Screenshot 2025-09-16 123039.png" alt="Screenshot - add task" width="320" style="margin:6px;"/></a>
-   <a href="./Screenshot 2025-09-16 123053.png"><img src="./Screenshot 2025-09-16 123053.png" alt="Screenshot - settings" width="320" style="margin:6px;"/></a>
+   <table>
+      <tr>
+         <td align="center" style="padding:6px">
+            <a href="./Screenshot 2025-09-16 122913.png">
+               <img src="./Screenshot 2025-09-16 122913.png" alt="main view" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+            </a>
+            <div style="font-size:13px;margin-top:6px;color:#444">Main view — full widget</div>
+         </td>
+         <td align="center" style="padding:6px">
+            <a href="./Screenshot 2025-09-16 123020.png">
+               <img src="./Screenshot 2025-09-16 123020.png" alt="minimized dot" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+            </a>
+            <div style="font-size:13px;margin-top:6px;color:#444">Minimized dot — collapsed state</div>
+         </td>
+      </tr>
+      <tr>
+         <td align="center" style="padding:6px">
+            <a href="./Screenshot 2025-09-16 123039.png">
+               <img src="./Screenshot 2025-09-16 123039.png" alt="add task" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+            </a>
+            <div style="font-size:13px;margin-top:6px;color:#444">Adding tasks — input & controls</div>
+         </td>
+         <td align="center" style="padding:6px">
+            <a href="./Screenshot 2025-09-16 123053.png">
+               <img src="./Screenshot 2025-09-16 123053.png" alt="settings" width="320" style="border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);border:1px solid rgba(0,0,0,0.06);"/>
+            </a>
+            <div style="font-size:13px;margin-top:6px;color:#444">Settings & options</div>
+         </td>
+      </tr>
+   </table>
 </div>
 
 ---
